@@ -24,6 +24,7 @@
 - **Async I/O:** `httpx` (비동기 HTTP 요청 필수), `asyncio`
 - **Database:** SQLite (파일 기반, 추후 확장 가능)
 - **AI/ML:** OpenAI API (gpt-3.5-turbo)
+- **NLP/Text Processing:** Regex, Counter (BoW, Keyword Extraction)
 
 ### Frontend (Client)
 - **Framework:** React 18 (Vite Build Tool)
@@ -56,6 +57,7 @@ Project_Root/
 │   │   ├── api/            # Route Handlers
 │   │   ├── schemas/        # Pydantic Models (DTO)
 │   │   ├── services/       # Business Logic (Crawler, Analyzer)
+│   │   ├── utils/          # Utility Functions (Text Processing, NLP)
 │   │   └── db/             # Database Models & Connection
 │   ├── requirements.txt
 │   └── .env

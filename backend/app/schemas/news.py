@@ -19,6 +19,7 @@ class NewsAnalysisUpdate(BaseModel):
     summary: str
     sentiment_label: str
     sentiment_score: Optional[float] = None
+    keywords: list[str] = [] # Top 5 Keywords
 
 # 클라이언트 응답 (DB 조회)
 class NewsResponse(NewsBase):
@@ -26,6 +27,7 @@ class NewsResponse(NewsBase):
     summary: Optional[str] = None
     sentiment_label: Optional[str] = None
     sentiment_score: Optional[float] = None
+    keywords: list[str] = []
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

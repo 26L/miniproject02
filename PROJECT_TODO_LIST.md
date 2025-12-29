@@ -39,10 +39,10 @@
     - [x] 프롬프트 엔지니어링 (요약 및 감성 분석 지시) (Mock 모드 지원)
 
 ### 1-4. API 엔드포인트 구현 (Endpoints)
-- [ ] `POST /api/v1/news/search`: 뉴스 검색 및 DB 저장
-- [ ] `GET /api/v1/news`: 저장된 뉴스 목록 조회
-- [ ] `POST /api/v1/analysis/{id}`: 특정 뉴스 AI 분석 요청
-- [ ] `main.py`: `CORSMiddleware` 설정 (Frontend 연동 준비)
+- [x] `POST /api/v1/news/search`: 뉴스 검색 및 DB 저장
+- [x] `GET /api/v1/news`: 저장된 뉴스 목록 조회
+- [x] `POST /api/v1/analysis/{id}`: 특정 뉴스 AI 분석 요청
+- [x] `main.py`: `CORSMiddleware` 설정 (Frontend 연동 준비)
 
 ## 2. 프론트엔드 개발 (Frontend: React)
 > **상태:** ⬜ 대기 중

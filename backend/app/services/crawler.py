@@ -3,9 +3,11 @@ from datetime import datetime
 from typing import List
 from app.core.config import settings
 from app.schemas.news import NewsCreate
+from app.utils.text import TextProcessor
 
 class NewsCrawler:
     BASE_URL = "https://newsapi.org/v2/everything"
+
 
     async def search_news(self, query: str) -> List[NewsCreate]:
         """
@@ -41,9 +43,9 @@ class NewsCrawler:
                 articles = data.get("articles", [])
                 return [
                     NewsCreate(
-                        title=article.get("title", "No Title"),
+                        title=TextProcessor.clean_text(article.get("title", "No Title")),
                         url=article.get("url", ""),
-                        content=article.get("content") or article.get("description", ""),
+                        content=TextProcessor.clean_text(article.get("content") or article.get("description", "")),
                         image_url=article.get("urlToImage"),
                         published_at=datetime.fromisoformat(article["publishedAt"].replace("Z", "+00:00")) if article.get("publishedAt") else datetime.now()
                     )
