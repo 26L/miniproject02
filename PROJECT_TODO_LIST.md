@@ -16,7 +16,7 @@
     - [x] `.env` 파일 템플릿 작성
 
 ## 1. 백엔드 개발 (Backend: FastAPI)
-> **상태:** 🔄 진행 중
+> **상태:** ✅ 완료
 
 ### 1-1. 기본 설정 (Setup)
 - [x] Python 가상환경(`venv`) 생성 및 활성화
@@ -37,12 +37,15 @@
 - [x] **AI 분석기 (`services/analyzer.py`)**
     - [x] OpenAI API 연동 (ChatCompletion)
     - [x] 프롬프트 엔지니어링 (요약 및 감성 분석 지시) (Mock 모드 지원)
+- [x] **NLP 유틸리티 (`utils/text.py`)**
+    - [x] 텍스트 전처리 (HTML 제거) 및 BoW 키워드 추출 구현
 
 ### 1-4. API 엔드포인트 구현 (Endpoints)
 - [x] `POST /api/v1/news/search`: 뉴스 검색 및 DB 저장
 - [x] `GET /api/v1/news`: 저장된 뉴스 목록 조회
 - [x] `POST /api/v1/analysis/{id}`: 특정 뉴스 AI 분석 요청
 - [x] `main.py`: `CORSMiddleware` 설정 (Frontend 연동 준비)
+- [x] **테스트 및 검증**: Pytest를 통한 API 동작 확인 완료
 
 ## 2. 프론트엔드 개발 (Frontend: React)
 > **상태:** ⬜ 대기 중
