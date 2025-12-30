@@ -23,38 +23,48 @@ class NewsAnalyzer:
         return await self._analyze_via_gpt(title, content, keywords)
 
     async def _analyze_via_gpt(self, title: str, content: str, keywords: list[str]) -> NewsAnalysisUpdate:
+        import json
+
         system_prompt = (
             "You are a helpful news assistant. "
-            "Please summarize the news in 3 bullet points (korean) and analyze the sentiment. "
-            "Return result in JSON format: {summary: '...', sentiment_label: 'positive'|'negative'|'neutral', sentiment_score: float(-1.0 to 1.0)}"
+            "Summarize the news in 3 bullet points in Korean and analyze the sentiment. "
+            "You must return a valid JSON object with the following keys: "
+            "'summary' (string, the 3 bullet points combined), "
+            "'sentiment_label' (string, one of 'positive', 'negative', 'neutral'), "
+            "'sentiment_score' (float, between -1.0 and 1.0)."
         )
         
-        user_message = f"Title: {title}\nContent: {content[:1000]}" # 토큰 절약
+        user_message = f"Title: {title}\nContent: {content[:1500]}" # Limit context window
 
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=settings.OPENAI_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
                 ],
                 temperature=0.7,
+                # response_format={"type": "json_object"} # Available in newer models, safe to rely on prompt for base 3.5
             )
             
-            # 실제 구현 시에는 JSON 파싱 로직을 더 정교하게 다듬어야 함 (지금은 간소화)
-            # GPT가 JSON string을 뱉는다고 가정
-            content = response.choices[0].message.content
-            # 여기서는 편의상 간단한 파싱이나 Mock 처리로 대체 가능하나, 
-            # 일단은 실제 응답을 그대로 쓴다고 가정하고 구조만 맞춥니다.
-            # (실제로는 json.loads 등을 써야 함)
-            
-            # Fallback for implementation simplicity in this turn
-            return NewsAnalysisUpdate(
-                summary=f"AI Summary for: {title}",
-                sentiment_label="neutral",
-                sentiment_score=0.0,
-                keywords=keywords
-            )
+            content_str = response.choices[0].message.content
+            try:
+                data = json.loads(content_str)
+                return NewsAnalysisUpdate(
+                    summary=data.get("summary", "No summary provided."),
+                    sentiment_label=data.get("sentiment_label", "neutral"),
+                    sentiment_score=data.get("sentiment_score", 0.0),
+                    keywords=keywords
+                )
+            except json.JSONDecodeError:
+                print(f"[ERROR] Failed to parse GPT response as JSON: {content_str}")
+                # Fallback if JSON parsing fails
+                return NewsAnalysisUpdate(
+                    summary=content_str[:500], # Return raw text as summary if parsing fails
+                    sentiment_label="neutral",
+                    sentiment_score=0.0,
+                    keywords=keywords
+                )
 
         except Exception as e:
             print(f"[ERROR] OpenAI API Request failed: {e}")

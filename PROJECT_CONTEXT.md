@@ -12,6 +12,7 @@
     2. OpenAI API(GPT-3.5) 활용 뉴스 요약 및 감성 분석.
     3. FastAPI 백엔드와 React 프론트엔드 분리 구조.
     4. 분석 결과의 시각화 (감성 점수, 색상 코딩).
+    5. **Mock Data Mode:** API Key 없이도 개발 및 테스트가 가능한 모의 데이터 시스템 지원.
 
 ---
 
@@ -22,9 +23,10 @@
 - **Framework:** FastAPI
 - **Data Handling:** Pydantic v2 (Strict Typing), SQLAlchemy (ORM)
 - **Async I/O:** `httpx` (비동기 HTTP 요청 필수), `asyncio`
-- **Database:** SQLite (파일 기반, 추후 확장 가능)
-- **AI/ML:** OpenAI API (gpt-3.5-turbo)
+- **Database:** SQLite (파일 기반, `aiosqlite` 비동기 드라이버 사용)
+- **AI/ML:** OpenAI API (gpt-4o-mini)
 - **NLP/Text Processing:** Regex, Counter (BoW, Keyword Extraction)
+- **Testing:** Pytest, Pytest-Asyncio
 
 ### Frontend (Client)
 - **Framework:** React 18 (Vite Build Tool)
@@ -59,6 +61,9 @@ Project_Root/
 │   │   ├── services/       # Business Logic (Crawler, Analyzer)
 │   │   ├── utils/          # Utility Functions (Text Processing, NLP)
 │   │   └── db/             # Database Models & Connection
+│   ├── tests/              # Pytest Test Cases
+│   │   └── test_api.py
+│   ├── pytest.ini          # Pytest Configuration
 │   ├── requirements.txt
 │   └── .env
 │

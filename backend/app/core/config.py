@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     # External APIs
     OPENAI_API_KEY: str = ""
     NEWS_API_KEY: str = ""
+    OPENAI_MODEL: str = "gpt-4o-mini"
     
     # Dev Mode
     USE_MOCK_DATA: bool = True # True면 외부 API 대신 Mock 데이터 사용
