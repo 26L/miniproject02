@@ -34,6 +34,7 @@
 - **Styling:** Tailwind CSS
 - **State Management:** TanStack Query (React Query)
 - **HTTP Client:** Axios
+- **Design System:** See `docs/guides/` (Design Token, UI Guideline, Structural Spec)
 
 ### DevOps & Docs
 - **CLI Tool:** Gemini CLI
@@ -80,7 +81,14 @@ Project_Root/
 └── docs/                   # Documentation & Prompts
     ├── prompts/            # AI Personas & Task prompts
     ├── reports/            # Project reports
-    └── guides/             # Manuals
+    └── guides/             # Manuals & Standards
+        ├── API_Key_Setup_Guide.md
+        ├── Development_Standard_Guide.md
+        ├── Design Token Guideline.md
+        ├── Frontend UI Design Guideline.md
+        ├── Structural Design Specification.md
+        ├── UI Markdown.md
+        └── UI Review Checklist.md
 
 ```
 
