@@ -48,22 +48,23 @@
 - [x] **테스트 및 검증**: Pytest를 통한 API 동작 확인 완료
 
 ## 2. 프론트엔드 개발 (Frontend: React)
-> **상태:** ⬜ 대기 중
+> **상태:** ✅ 1단계 완료 (UI/UX 구현)
 
 ### 2-1. 프로젝트 세팅 (Setup)
-- [ ] Vite + React + TypeScript 프로젝트 생성
-- [ ] Tailwind CSS 설치 및 설정
-- [ ] 라이브러리 설치 (`axios`, `react-router-dom`, `@tanstack/react-query`, `lucide-react`)
+- [x] Vite + React + TypeScript 프로젝트 생성
+- [x] Tailwind CSS 설치 및 설정 (`Design Token Guideline` 반영)
+- [x] 라이브러리 설치 (`axios`, `@tanstack/react-query`)
 
 ### 2-2. UI 컴포넌트 개발 (Components)
-- [ ] `src/api/axios.ts`: Axios 인스턴스 및 Base URL 설정
-- [ ] **Layout**: 헤더(로고), 메인 컨테이너 구조 잡기
-- [ ] **SearchBar**: 검색어 입력 폼 및 검색 버튼 UI
-- [ ] **NewsCard**:
-    - [ ] 기본 상태: 제목, 이미지, 날짜 표시
-    - [ ] 분석 완료 상태: 요약문, 감성 라벨(긍정/부정)에 따른 색상 테두리 적용
+- [x] **Layout**: 헤더(로고, 메뉴), 메인 컨테이너, 푸터 구현 (`MainLayout`)
+- [x] **SearchArea**: 대형 검색창 및 소개 문구 구현
+- [x] **RecommendationColumn**: 추천 뉴스 리스트 구현 (Left Column)
+- [x] **ResultColumn**: 뉴스 카드 및 감성 뱃지 구현 (Right Column)
+- [x] **Localization**: 한국어 우선 정책 적용 및 정중한 어조(해요체) 반영
 
 ### 2-3. 기능 연동 (Integration)
+> **상태:** ⬜ 대기 중 (Next Step)
+- [ ] `src/api/axios.ts`: Axios 인스턴스 및 Base URL 설정
 - [ ] **검색 기능**: API `/search` 호출 및 React Query로 데이터 캐싱
 - [ ] **분석 기능**: "AI 분석" 버튼 클릭 이벤트 핸들링 및 UI 낙관적 업데이트(Optimistic Update)
 - [ ] **로딩 및 에러 처리**: 스켈레톤 UI 또는 스피너 적용
