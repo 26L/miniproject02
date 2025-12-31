@@ -63,15 +63,16 @@
 - [x] **Localization**: 한국어 우선 정책 적용 및 정중한 어조(해요체) 반영
 
 ### 2-3. 기능 연동 (Integration)
-> **상태:** ⬜ 대기 중 (Next Step)
-- [ ] `src/api/axios.ts`: Axios 인스턴스 및 Base URL 설정
-- [ ] **검색 기능**: API `/search` 호출 및 React Query로 데이터 캐싱
-- [ ] **분석 기능**: "AI 분석" 버튼 클릭 이벤트 핸들링 및 UI 낙관적 업데이트(Optimistic Update)
-- [ ] **로딩 및 에러 처리**: 스켈레톤 UI 또는 스피너 적용
+> **상태:** ✅ 완료
+- [x] `src/api/client.ts`: Axios 인스턴스 및 Base URL 설정
+- [x] **검색 기능**: API `/search` 호출 및 React Query로 데이터 캐싱 (`useSearchNews`)
+- [x] **분석 기능**: "AI 분석" 버튼 클릭 이벤트 핸들링 (`useAnalyzeNews`)
+- [x] **로딩 및 에러 처리**: 스켈레톤 UI(ResultColumn) 및 로딩 스피너(SearchArea) 적용
 
 ## 3. 테스트 및 배포 (Final Polish)
-> **상태:** ⬜ 대기 중
+> **상태:** ✅ 완료
 
-- [ ] **E2E 테스트**: 검색 -> 결과 확인 -> AI 분석 -> UI 변경 전체 흐름 확인
-- [ ] **예외 처리 점검**: 검색 결과 0건일 때, API 키 오류일 때 안내 문구 확인
-- [ ] (Optional) Docker Compose 파일 작성
+- [x] **E2E 테스트**: 검색 -> 결과 확인 -> AI 분석 -> UI 변경 전체 흐름 확인 (Live API 테스트 완료)
+- [x] **예외 처리 점검**: 검색 결과 0건일 때, API 키 오류일 때 안내 문구 확인 및 백엔드 503 처리 완료
+- [x] **데이터 보존 고도화**: AI 분석 키워드 DB 영구 저장 기능 구현 완료
+- [x] **Docker 환경 구축**: `Dockerfile` 및 `docker-compose.yml` 작성 완료

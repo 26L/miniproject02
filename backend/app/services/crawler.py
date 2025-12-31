@@ -54,7 +54,7 @@ class NewsCrawler:
                 ]
             except Exception as e:
                 print(f"[ERROR] NewsAPI request failed: {e}")
-                return []
+                raise e # Re-raise to be handled by the endpoint or middleware
 
     def _get_mock_news(self, query: str) -> List[NewsCreate]:
         """UI 개발 및 테스트를 위한 가짜 데이터"""

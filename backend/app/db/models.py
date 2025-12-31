@@ -16,6 +16,7 @@ class News(Base):
     summary = Column(Text, nullable=True)
     sentiment_label = Column(String, nullable=True) # 'positive', 'negative', 'neutral'
     sentiment_score = Column(Float, nullable=True) # -1.0 ~ 1.0 (Optional)
+    keywords = Column(Text, nullable=True) # JSON string or comma-separated keywords
     
     published_at = Column(DateTime(timezone=True), nullable=True) # 뉴스 원문 발행 시간
     created_at = Column(DateTime(timezone=True), server_default=func.now()) # DB 수집 시간
