@@ -100,4 +100,11 @@
 - **구조화**: Semantic Tags (header, main, footer) 및 Schema.org
 - **접근성**: WCAG 2.1 AA 기준 준수 (명도 대비, 대체 텍스트)
 
+---
 
+### 10. Language Guideline (Language)
+
+**언어 사용 규칙**
+- **기본 언어**: 한국어 (Korean) - 모든 UI 텍스트의 기본
+- **보조 언어**: 영어 (English) - 기술 용어 및 공간 제약 시 허용
+- **톤앤매너**: 정중하고 명확한 어조 (Professional & Polite)
