@@ -218,4 +218,15 @@ News Result Card <br>
 
 ---
 
+## 13. 향후 아키텍처 고려사항 (Future Architecture Considerations)
+
+### 13.1 데이터베이스 확장성 (Database Scalability)
+- **마이그레이션 도구 (Alembic):** 스키마 변경의 안전성을 보장하기 위해 도입을 권장한다.
+- **검색 최적화 (FTS):** 대량의 텍스트 데이터 처리를 위해 SQLite FTS(Full-Text Search) 또는 별도 인덱싱을 고려한다.
+
+### 13.2 에러 핸들링 고도화
+- 프론트엔드와 백엔드 간 명확한 에러 코드 프로토콜을 수립하여 사용자 경험을 향상시킨다.
+
+---
+
 End of Structural Design Specification

@@ -54,6 +54,11 @@ async def analyze_sentiment(text: str) -> SentimentResult:
     # ... 비즈니스 로직 ...
 ```
 
+### 2.3. 에러 핸들링 (Error Handling)
+*   **Try-Except 사용:** 외부 API 호출 등 실패 가능성이 있는 로직은 반드시 `try-except`로 감싸야 합니다.
+*   **HTTP 예외 반환:** FastAPI의 `HTTPException`을 사용하여 명확한 상태 코드와 메시지를 클라이언트에 전달합니다.
+*   **재시도 로직 (Future Standard):** API Rate Limit 이슈 대응을 위해 `tenacity` 등의 라이브러리를 활용한 재시도 로직 구현을 권장합니다.
+
 ---
 
 ## 3. 프론트엔드 가이드 (React / TypeScript)

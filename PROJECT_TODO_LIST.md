@@ -47,27 +47,40 @@
 - [x] `main.py`: `CORSMiddleware` 설정 (Frontend 연동 준비)
 - [x] **테스트 및 검증**: Pytest를 통한 API 동작 확인 완료
 
-## 2. 프론트엔드 개발 (Frontend: React)
-> **상태:** ✅ 1단계 완료 (UI/UX 구현)
+## 2. 프론트엔드 개발 (Frontend: React - News Insight Pro 2.0)
+> **상태:** 🔄 재개발 진행 중 (Rebuild in Progress)
 
-### 2-1. 프로젝트 세팅 (Setup)
-- [x] Vite + React + TypeScript 프로젝트 생성
-- [x] Tailwind CSS 설치 및 설정 (`Design Token Guideline` 반영)
-- [x] 라이브러리 설치 (`axios`, `@tanstack/react-query`)
+### 2-1. 프로젝트 초기화 (Initialization)
+- [x] **Cleanup**: 기존 프론트엔드 디렉토리 삭제
+- [x] **Setup**: Vite + React + TypeScript 프로젝트 재생성
+- [x] **Configuration**:
+    - Tailwind CSS, PostCSS, Autoprefixer 설정
+    - 절대 경로(`@/*`) 설정 (`vite.config.ts`, `tsconfig.json`)
+    - 환경 변수 재설정 (`.env.development`)
 
-### 2-2. UI 컴포넌트 개발 (Components)
-- [x] **Layout**: 헤더(로고, 메뉴), 메인 컨테이너, 푸터 구현 (`MainLayout`)
-- [x] **SearchArea**: 대형 검색창 및 소개 문구 구현
-- [x] **RecommendationColumn**: 추천 뉴스 리스트 구현 (Left Column)
-- [x] **ResultColumn**: 뉴스 카드 및 감성 뱃지 구현 (Right Column)
-- [x] **Localization**: 한국어 우선 정책 적용 및 정중한 어조(해요체) 반영
+### 2-2. 핵심 라이브러리 및 구조 (Core & Structure)
+- [x] **Libraries**:
+    - `axios` (HTTP Client)
+    - `@tanstack/react-query` (Server State)
+    - `lucide-react` (Icons)
+    - `clsx`, `tailwind-merge` (Style Util)
+- [x] **Directory Structure**:
+    - `src/components/ui` (Atomic Components)
+    - `src/features` (Business Logic Components)
+    - `src/services` (API Layer)
 
-### 2-3. 기능 연동 (Integration)
-> **상태:** ✅ 완료
-- [x] `src/api/client.ts`: Axios 인스턴스 및 Base URL 설정
-- [x] **검색 기능**: API `/search` 호출 및 React Query로 데이터 캐싱 (`useSearchNews`)
-- [x] **분석 기능**: "AI 분석" 버튼 클릭 이벤트 핸들링 (`useAnalyzeNews`)
-- [x] **로딩 및 에러 처리**: 스켈레톤 UI(ResultColumn) 및 로딩 스피너(SearchArea) 적용
+### 2-3. UI 컴포넌트 개발 (UI Development)
+- [x] **Layout System**: Header, Main, Footer (Responsive)
+- [x] **Dashboard Features**:
+    - [x] `SearchHero`: 중앙 집중형 검색바
+    - [x] `NewsGrid`: 뉴스 카드 그리드 뷰
+    - [x] `NewsCard`: 개별 뉴스 카드 (감성 배지, 키워드 포함)
+
+### 2-4. 기능 구현 (Feature Implementation)
+- [x] **Search**: 검색 API 연동 및 상태 관리
+- [x] **Analyze**: 개별 뉴스 AI 분석 요청 및 결과 실시간 반영
+- [x] **Interactive Feedback**: 스켈레톤 로딩(기본), 에러 핸들링
+
 
 ## 3. 테스트 및 배포 (Final Polish)
 > **상태:** ✅ 완료
@@ -76,3 +89,25 @@
 - [x] **예외 처리 점검**: 검색 결과 0건일 때, API 키 오류일 때 안내 문구 확인 및 백엔드 503 처리 완료
 - [x] **데이터 보존 고도화**: AI 분석 키워드 DB 영구 저장 기능 구현 완료
 - [x] **Docker 환경 구축**: `Dockerfile` 및 `docker-compose.yml` 작성 완료
+
+## 4. 향후 로드맵 및 개선 (Future Roadmap & Improvements)
+
+### 4-1. 기술적 고도화 (Technical Refinement) - **Priority**
+- [ ] **DB 마이그레이션 도구 도입 (Alembic)**
+    - 스키마 변경 이력 관리 및 안전한 마이그레이션 체계 구축
+- [ ] **검색 성능 최적화**
+    - SQLite FTS(Full-Text Search) 활성화 또는 인덱싱 전략 수립
+    - 대량 데이터 조회 시 쿼리 성능 개선
+- [ ] **에러 핸들링 강화**
+    - 외부 API(NewsAPI, OpenAI) Rate Limit 대응 로직(`tenacity` 등)
+    - 백엔드 에러 코드 세분화 및 프론트엔드 사용자 알림 고도화
+
+### 4-2. 기능적 확장 (Functional Expansion) - **On Hold**
+- [ ] **사용자 인증 시스템 (User Auth)**: OAuth2 로그인 및 관심 뉴스 저장
+- [ ] **데이터 시각화 (Visualization)**: 감성 점수 추이 그래프 등 대시보드
+- [ ] **다국어 지원 (Multi-language)**: 실시간 번역 기능
+- [ ] **알림 서비스 (Notification)**: 키워드 알림 (Email/Push)
+
+## 5. 유지보수 및 버그 수정 (Maintenance & Bug Fixes)
+- [x] **Frontend 설정 오류 수정**: `frontend/.env.development`의 API 주소(`VITE_API_BASE_URL`)를 `localhost:80`에서 `localhost:8000`으로 수정.
+- [x] **Backend CORS 설정 확장**: 도커 및 실서버 환경을 위해 `allow_origins`에 `http://localhost`(80포트) 추가.

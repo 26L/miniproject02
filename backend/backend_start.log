@@ -1,0 +1,108 @@
+2025-12-31 19:45:10,685 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-31 19:45:10,687 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("news")
+2025-12-31 19:45:10,687 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-31 19:45:10,688 INFO sqlalchemy.engine.Engine 
+DROP TABLE news
+2025-12-31 19:45:10,688 INFO sqlalchemy.engine.Engine [no key 0.00023s] ()
+2025-12-31 19:45:10,693 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("news")
+2025-12-31 19:45:10,693 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-31 19:45:10,694 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("news")
+2025-12-31 19:45:10,694 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-31 19:45:10,695 INFO sqlalchemy.engine.Engine 
+CREATE TABLE news (
+	id INTEGER NOT NULL, 
+	title VARCHAR NOT NULL, 
+	url VARCHAR NOT NULL, 
+	content TEXT, 
+	image_url VARCHAR, 
+	summary TEXT, 
+	sentiment_label VARCHAR, 
+	sentiment_score FLOAT, 
+	keywords TEXT, 
+	published_at DATETIME, 
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP, 
+	PRIMARY KEY (id)
+)
+
+
+2025-12-31 19:45:10,696 INFO sqlalchemy.engine.Engine [no key 0.00020s] ()
+2025-12-31 19:45:10,699 INFO sqlalchemy.engine.Engine CREATE INDEX ix_news_id ON news (id)
+2025-12-31 19:45:10,700 INFO sqlalchemy.engine.Engine [no key 0.00023s] ()
+2025-12-31 19:45:10,703 INFO sqlalchemy.engine.Engine CREATE UNIQUE INDEX ix_news_url ON news (url)
+2025-12-31 19:45:10,703 INFO sqlalchemy.engine.Engine [no key 0.00032s] ()
+2025-12-31 19:45:10,707 INFO sqlalchemy.engine.Engine CREATE INDEX ix_news_title ON news (title)
+2025-12-31 19:45:10,707 INFO sqlalchemy.engine.Engine [no key 0.00023s] ()
+2025-12-31 19:45:10,710 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     127.0.0.1:63784 - "GET / HTTP/1.1" 200 OK
+[MOCK] Returning mock news data for query: Tesla
+2025-12-31 19:45:14,528 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-31 19:45:14,531 INFO sqlalchemy.engine.Engine SELECT news.id, news.title, news.url, news.content, news.image_url, news.summary, news.sentiment_label, news.sentiment_score, news.keywords, news.published_at, news.created_at 
+FROM news 
+WHERE news.url = ?
+2025-12-31 19:45:14,531 INFO sqlalchemy.engine.Engine [generated in 0.00029s] ('https://example.com/news/1/Tesla',)
+2025-12-31 19:45:14,534 INFO sqlalchemy.engine.Engine INSERT INTO news (title, url, content, image_url, summary, sentiment_label, sentiment_score, keywords, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+2025-12-31 19:45:14,535 INFO sqlalchemy.engine.Engine [generated in 0.00045s] ("'Tesla' Market Outlook: Positive Trends Ahead", 'https://example.com/news/1/Tesla', 'Recent analysis shows that Tesla is gaining significant traction in the global market...', 'https://picsum.photos/seed/news1/600/400', None, None, None, None, '2025-12-31 19:45:14.528635')
+2025-12-31 19:45:14,537 INFO sqlalchemy.engine.Engine COMMIT
+2025-12-31 19:45:14,540 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-31 19:45:14,541 INFO sqlalchemy.engine.Engine SELECT news.id, news.title, news.url, news.content, news.image_url, news.summary, news.sentiment_label, news.sentiment_score, news.keywords, news.published_at, news.created_at 
+FROM news 
+WHERE news.id = ?
+2025-12-31 19:45:14,541 INFO sqlalchemy.engine.Engine [generated in 0.00024s] (1,)
+2025-12-31 19:45:14,543 INFO sqlalchemy.engine.Engine SELECT news.id, news.title, news.url, news.content, news.image_url, news.summary, news.sentiment_label, news.sentiment_score, news.keywords, news.published_at, news.created_at 
+FROM news 
+WHERE news.url = ?
+2025-12-31 19:45:14,543 INFO sqlalchemy.engine.Engine [cached since 0.01181s ago] ('https://example.com/news/2/Tesla',)
+2025-12-31 19:45:14,544 INFO sqlalchemy.engine.Engine INSERT INTO news (title, url, content, image_url, summary, sentiment_label, sentiment_score, keywords, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+2025-12-31 19:45:14,544 INFO sqlalchemy.engine.Engine [cached since 0.01023s ago] ('Global Updates on Tesla', 'https://example.com/news/2/Tesla', 'Experts discuss the impact of Tesla on the economy. Several key factors are involved...', 'https://picsum.photos/seed/news2/600/400', None, None, None, None, '2025-12-31 19:45:14.528635')
+2025-12-31 19:45:14,547 INFO sqlalchemy.engine.Engine COMMIT
+2025-12-31 19:45:14,549 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-31 19:45:14,550 INFO sqlalchemy.engine.Engine SELECT news.id, news.title, news.url, news.content, news.image_url, news.summary, news.sentiment_label, news.sentiment_score, news.keywords, news.published_at, news.created_at 
+FROM news 
+WHERE news.id = ?
+2025-12-31 19:45:14,550 INFO sqlalchemy.engine.Engine [cached since 0.00875s ago] (2,)
+2025-12-31 19:45:14,551 INFO sqlalchemy.engine.Engine SELECT news.id, news.title, news.url, news.content, news.image_url, news.summary, news.sentiment_label, news.sentiment_score, news.keywords, news.published_at, news.created_at 
+FROM news 
+WHERE news.url = ?
+2025-12-31 19:45:14,551 INFO sqlalchemy.engine.Engine [cached since 0.02s ago] ('https://example.com/news/3/Tesla',)
+2025-12-31 19:45:14,553 INFO sqlalchemy.engine.Engine INSERT INTO news (title, url, content, image_url, summary, sentiment_label, sentiment_score, keywords, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+2025-12-31 19:45:14,553 INFO sqlalchemy.engine.Engine [cached since 0.0184s ago] ('Why Tesla Matters in 2025', 'https://example.com/news/3/Tesla', 'A deep dive into why Tesla is becoming a household name this year...', 'https://picsum.photos/seed/news3/600/400', None, None, None, None, '2025-12-31 19:45:14.528635')
+2025-12-31 19:45:14,555 INFO sqlalchemy.engine.Engine COMMIT
+2025-12-31 19:45:14,557 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-31 19:45:14,558 INFO sqlalchemy.engine.Engine SELECT news.id, news.title, news.url, news.content, news.image_url, news.summary, news.sentiment_label, news.sentiment_score, news.keywords, news.published_at, news.created_at 
+FROM news 
+WHERE news.id = ?
+2025-12-31 19:45:14,558 INFO sqlalchemy.engine.Engine [cached since 0.0174s ago] (3,)
+INFO:     127.0.0.1:63784 - "POST /api/v1/news/search?query=Tesla HTTP/1.1" 200 OK
+2025-12-31 19:45:14,560 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-12-31 19:45:14,564 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-31 19:45:14,564 INFO sqlalchemy.engine.Engine SELECT news.id, news.title, news.url, news.content, news.image_url, news.summary, news.sentiment_label, news.sentiment_score, news.keywords, news.published_at, news.created_at 
+FROM news 
+WHERE news.id = ?
+2025-12-31 19:45:14,565 INFO sqlalchemy.engine.Engine [generated in 0.00027s] (1,)
+[MOCK] Returning mock analysis for: 'Tesla' Market Outlo...
+2025-12-31 19:45:14,568 INFO sqlalchemy.engine.Engine UPDATE news SET summary=?, sentiment_label=?, sentiment_score=?, keywords=? WHERE news.id = ?
+2025-12-31 19:45:14,568 INFO sqlalchemy.engine.Engine [generated in 0.00026s] ('1. 이 뉴스는 시장의 긍정적인 신호를 다루고 있습니다.\n2. 주요 지표가 상승세를 보입니다.\n3. 전문가들은 지속적인 성장을 예측합니다.', 'positive', 0.85, '["recent", "analysis", "shows", "tesla", "gaining"]', 1)
+2025-12-31 19:45:14,569 INFO sqlalchemy.engine.Engine COMMIT
+2025-12-31 19:45:14,571 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-31 19:45:14,571 INFO sqlalchemy.engine.Engine SELECT news.id, news.title, news.url, news.content, news.image_url, news.summary, news.sentiment_label, news.sentiment_score, news.keywords, news.published_at, news.created_at 
+FROM news 
+WHERE news.id = ?
+2025-12-31 19:45:14,573 INFO sqlalchemy.engine.Engine [cached since 0.03152s ago] (1,)
+INFO:     127.0.0.1:63784 - "POST /api/v1/news/analysis/1 HTTP/1.1" 200 OK
+2025-12-31 19:45:14,574 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:49297 - "GET / HTTP/1.1" 200 OK
+2025-12-31 19:46:17,243 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-31 19:46:17,244 INFO sqlalchemy.engine.Engine SELECT news.id, news.title, news.url, news.content, news.image_url, news.summary, news.sentiment_label, news.sentiment_score, news.keywords, news.published_at, news.created_at 
+FROM news ORDER BY news.created_at DESC
+ LIMIT ? OFFSET ?
+2025-12-31 19:46:17,244 INFO sqlalchemy.engine.Engine [generated in 0.00031s] (100, 0)
+INFO:     127.0.0.1:49297 - "GET /api/v1/news/ HTTP/1.1" 200 OK
+2025-12-31 19:46:17,246 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:61977 - "GET /api/v1/news HTTP/1.1" 307 Temporary Redirect
+2025-12-31 19:46:27,690 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-31 19:46:27,691 INFO sqlalchemy.engine.Engine SELECT news.id, news.title, news.url, news.content, news.image_url, news.summary, news.sentiment_label, news.sentiment_score, news.keywords, news.published_at, news.created_at 
+FROM news ORDER BY news.created_at DESC
+ LIMIT ? OFFSET ?
+2025-12-31 19:46:27,691 INFO sqlalchemy.engine.Engine [cached since 10.45s ago] (100, 0)
+INFO:     127.0.0.1:61977 - "GET /api/v1/news/ HTTP/1.1" 200 OK
+2025-12-31 19:46:27,693 INFO sqlalchemy.engine.Engine ROLLBACK

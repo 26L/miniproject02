@@ -9,7 +9,6 @@ export const apiClient = axios.create({
   },
 });
 
-// Optional: Add interceptors for error logging or request modification
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {

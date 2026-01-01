@@ -72,5 +72,6 @@
 ## 5. 문제 해결 (Troubleshooting)
 
 - **CORS 에러 발생 시:** `backend/app/main.py`의 `CORSMiddleware` 설정에 `http://localhost:5173`이 포함되어 있는지 확인하세요.
+- **API 연결 실패:** `frontend/.env.development` 파일의 `VITE_API_BASE_URL`이 `http://localhost:8000/api/v1`으로 올바르게 설정되어 있는지 확인하세요.
 - **API 응답 없음:** `.env` 파일의 API 키가 유효한지, 그리고 백엔드 터미널에 에러 로그가 찍히지 않는지 확인하세요.
 - **포트 충돌:** 이미 8000번이나 5173번 포트가 사용 중이라면 다른 포트로 실행하세요. (예: `uvicorn ... --port 8080`)
