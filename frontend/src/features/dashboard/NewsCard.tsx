@@ -44,9 +44,9 @@ export function NewsCard({ news, onAnalyze, isAnalyzing }: NewsCardProps) {
           {news.summary || news.content || "No content available."}
         </p>
         
-        {news.keywords && (
+        {news.keywords && news.keywords.length > 0 && (
            <div className="flex flex-wrap gap-1 mb-4">
-             {JSON.parse(news.keywords).slice(0, 3).map((k: string, i: number) => (
+             {news.keywords.slice(0, 3).map((k: string, i: number) => (
                <span key={i} className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold text-foreground">
                  #{k}
                </span>
@@ -59,22 +59,22 @@ export function NewsCard({ news, onAnalyze, isAnalyzing }: NewsCardProps) {
         <Button 
           variant="outline" 
           size="sm" 
-          className="w-full gap-2"
+          className="flex-1 gap-1.5 px-2 text-xs"
           onClick={() => window.open(news.url, '_blank')}
         >
-          <ExternalLink className="h-4 w-4" />
-          Read
+          <ExternalLink className="h-3.5 w-3.5" />
+          원문 읽기
         </Button>
         {!news.summary && (
           <Button 
             variant="default" 
             size="sm" 
-            className="w-full gap-2"
+            className="flex-1 gap-1.5 px-2 text-xs"
             onClick={() => onAnalyze(news.id)}
             isLoading={isAnalyzing}
           >
-            <Bot className="h-4 w-4" />
-            Analyze
+            <Bot className="h-3.5 w-3.5" />
+            AI 분석
           </Button>
         )}
       </div>

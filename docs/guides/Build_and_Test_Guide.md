@@ -114,3 +114,28 @@ GitHub Actions 등 CI 도구 설정 시 아래 흐름을 권장합니다.
     - `npm install`
     - `npm run lint`
     - `npm run build` (Build 성공 시 Merge 가능)
+
+---
+
+## 5. 트러블슈팅 (Troubleshooting)
+
+### 5.1. 프론트엔드 연결 불가 (Site can't be reached)
+개발 서버(`npm run dev`)를 실행했음에도 `http://localhost:5173` 접속이 안 되는 경우, 윈도우 방화벽이나 네트워크 바인딩 문제입니다.
+
+**해결 방법:**
+1. **명시적 호스트 바인딩:**
+   기본 루프백(localhost) 대신 모든 네트워크 인터페이스에 서버를 노출시킵니다.
+   ```powershell
+   npm run dev -- --host
+   ```
+   실행 후 출력되는 주소 중 `http://127.0.0.1:5173` 또는 `http://192.168.x.x:5173`으로 접속을 시도하세요.
+
+2. **방화벽 확인:**
+   Windows Defender 방화벽에서 `Node.js JavaScript Runtime` 앱의 통신이 허용되어 있는지 확인하십시오.
+
+3. **백엔드 통신 에러 (CORS/404):**
+   화면은 뜨는데 데이터가 안 나온다면, `frontend/.env.development` 파일의 `VITE_API_BASE_URL`이 올바른지 확인하세요.
+   ```env
+   # 로컬 개발 시 프록시 없이 직접 연결
+   VITE_API_BASE_URL=http://localhost:8000/api/v1
+   ```

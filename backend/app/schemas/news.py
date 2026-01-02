@@ -12,7 +12,10 @@ class NewsBase(BaseModel):
 
 # 뉴스 생성 (크롤링/검색 결과 저장)
 class NewsCreate(NewsBase):
-    pass
+    summary: Optional[str] = None
+    sentiment_label: Optional[str] = None
+    sentiment_score: Optional[float] = None
+    keywords: list[str] = []
 
 # AI 분석 결과 업데이트
 class NewsAnalysisUpdate(BaseModel):

@@ -90,50 +90,31 @@ Application <br>
 - Desktop 기준 2컬럼 구조를 유지한다.
 - 컬럼 간 역할 교차를 허용하지 않는다.
 
----
-
-## 6. Recommendation Column (Left Column)
+## 6. News Feed Column (Left Column)
 
 ### 역할
-- 사용자의 탐색을 돕는 보조 정보 제공
+- 검색 결과로 생성된 최신 뉴스 목록 제공 (핵심 콘텐츠)
 
 ### 포함 요소
-- 오늘의 주요 뉴스 리스트
-- 사용자 관심 기반 뉴스 리스트
+- 뉴스 결과 카드 목록 (NewsCard)
+- 검색 결과 정보 (Total Count 등)
 
 ### 구조 규칙
-- 리스트(List) 구조만 허용한다.
-- 카드(Card) 구조 사용을 금지한다.
-- 뉴스 요약 및 감정 분석 결과 표시를 금지한다.
+- 화면의 약 60~70% 너비를 차지한다.
+- 무한 스크롤 또는 페이징을 통해 대량의 뉴스 데이터를 탐색할 수 있다.
 
-### 금지 사항
-- 결과 콘텐츠 상세 표시
-- Result Column을 직접 변경하는 처리
-
----
-
-## 7. Result Column (Right Column)
+## 7. Analysis & Trend Panel (Right Column)
 
 ### 역할
-- 사용자가 소비하는 최종 핵심 정보 제공
+- 수집된 데이터의 통계적 요약 및 인사이트 제공 (보조 콘텐츠)
 
 ### 포함 요소
-- 뉴스 검색 결과 카드 목록
-
-### 카드 구조 정의
-
-News Result Card <br>
-├─ Title <br>
-├─ Summary <br>
-├─ Emotion Indicator <br>
-└─ Meta Information <br>
-├─ Source <br>
-└─ Date
-
+- 인기 키워드 (TrendPanel)
+- 감정 분석 분포 (Sentiment Chart/List)
 
 ### 구조 규칙
-- 모든 결과는 카드 단위로 표현한다.
-- 추천, 설정, 광고 요소를 포함하지 않는다.
+- 화면의 약 30~40% 너비를 차지한다.
+- 사용자의 시선 흐름에 따라 상단에 고정(Sticky)되어 요약 정보를 상시 노출할 수 있다.
 
 ---
 

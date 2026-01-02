@@ -4,13 +4,14 @@ import { newsApi } from '@/services/news';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { SearchHero } from '@/features/dashboard/SearchHero';
 import { NewsGrid } from '@/features/dashboard/NewsGrid';
+import { TrendPanel } from '@/features/dashboard/TrendPanel';
 
 export function DashboardPage() {
   const queryClient = useQueryClient();
   const [analyzingId, setAnalyzingId] = useState<number | null>(null);
 
   // Default query to fetch latest news
-  const { data: newsItems = [], isLoading: isInitialLoading } = useQuery({
+  const { data: newsItems = [], isLoading: isInitialLoading, error } = useQuery({
     queryKey: ['news', 'latest'],
     queryFn: () => newsApi.getAll(20),
   });
@@ -60,17 +61,35 @@ export function DashboardPage() {
       
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight">Latest Headlines</h2>
+          <h2 className="text-2xl font-bold tracking-tight">최신 뉴스</h2>
         </div>
         
         {isInitialLoading ? (
-           <div className="text-center py-20 text-muted-foreground">Loading news...</div>
+           <div className="text-center py-20 text-muted-foreground">뉴스 불러오는 중...</div>
+        ) : error ? (
+           <div className="text-center py-20 text-destructive bg-destructive/10 rounded-xl">
+             <p className="font-semibold">뉴스 로딩 실패</p>
+             <p className="text-sm">
+               {(error as any)?.message || '알 수 없는 오류'}
+               {(error as any)?.response?.status && ` (상태 코드: ${(error as any).response.status})`}
+             </p>
+             <p className="text-xs text-muted-foreground mt-2">백엔드 콘솔을 확인해주세요.</p>
+           </div>
         ) : (
-          <NewsGrid 
-            items={newsItems} 
-            onAnalyze={handleAnalyze} 
-            analyzingId={analyzingId}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <NewsGrid 
+                items={newsItems} 
+                onAnalyze={handleAnalyze} 
+                analyzingId={analyzingId}
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <div className="sticky top-24">
+                <TrendPanel items={newsItems} />
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </MainLayout>

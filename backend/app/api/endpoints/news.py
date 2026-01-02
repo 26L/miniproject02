@@ -1,6 +1,6 @@
 import json
 from typing import List, Any
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -42,7 +42,12 @@ async def search_and_save_news(
                 url=news_data.url,
                 content=news_data.content,
                 image_url=news_data.image_url,
-                published_at=news_data.published_at
+                published_at=news_data.published_at,
+                # Optional fields (if provided by Crawler/Mock)
+                summary=news_data.summary,
+                sentiment_label=news_data.sentiment_label,
+                sentiment_score=news_data.sentiment_score,
+                keywords=json.dumps(news_data.keywords) if news_data.keywords else None
             )
             db.add(new_news)
             await db.commit() 
@@ -60,7 +65,7 @@ async def search_and_save_news(
         responses.append(NewsResponse.model_validate(news_dict))
     return responses
 
-@router.get("/", response_model=List[NewsResponse])
+@router.get("", response_model=List[NewsResponse])
 async def read_news_list(
     skip: int = 0,
     limit: int = 100,
@@ -112,4 +117,16 @@ async def analyze_news_item(
     news_dict['keywords'] = analysis_result.keywords
     
     return NewsResponse.model_validate(news_dict)
+
+@router.delete("/reset", status_code=204)
+async def reset_db(
+    db: AsyncSession = Depends(get_db)
+) -> None:
+    """
+    DB의 모든 뉴스 데이터를 삭제합니다. (개발 및 테스트용)
+    """
+    from sqlalchemy import delete
+    await db.execute(delete(News))
+    await db.commit()
+    return
 

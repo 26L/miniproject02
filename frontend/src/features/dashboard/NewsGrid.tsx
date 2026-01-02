@@ -9,7 +9,11 @@ interface NewsGridProps {
 
 export function NewsGrid({ items, onAnalyze, analyzingId }: NewsGridProps) {
   if (items.length === 0) {
-    return null;
+    return (
+      <div className="text-center py-20 border-2 border-dashed rounded-xl">
+        <p className="text-muted-foreground">No news articles found. Try searching for something!</p>
+      </div>
+    );
   }
 
   return (

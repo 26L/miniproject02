@@ -2,11 +2,13 @@ import re
 from collections import Counter
 from typing import List
 
-# 간단한 불용어 리스트 (확장 가능)
-STOPWORDS = {
-    "a", "an", "the", "in", "on", "at", "to", "for", "of", "and", "or", "but", 
-    "is", "are", "was", "were", "be", "been", "this", "that", "it", "with", "as", 
-    "by", "from", "news", "report", "says", "said"
+# 확장된 전문 불용어 데이터셋
+ENGLISH_STOPWORDS = {
+    "a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can", "could", "did", "do", "does", "doing", "down", "during", "each", "few", "for", "from", "further", "had", "has", "have", "having", "he", "her", "here", "hers", "herself", "him", "himself", "his", "how", "i", "if", "in", "into", "is", "it", "its", "itself", "just", "me", "more", "most", "my", "myself", "no", "nor", "not", "now", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "she", "should", "so", "some", "such", "than", "that", "the", "their", "theirs", "them", "themselves", "then", "there", "these", "they", "this", "those", "through", "to", "too", "under", "until", "up", "very", "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom", "why", "with", "would", "you", "your", "yours", "yourself", "yourselves", "will", "shall", "can", "may", "might", "must", "says", "said", "via", "according", "shared", "reut", "news", "report", "print", "fine", "them", "following", "comments"
+}
+
+KOREAN_STOPWORDS = {
+    "있는", "있으며", "있고", "있다", "합니다", "하는", "했다", "있습니다", "위해", "대한", "통해", "대해", "따르면", "관련", "이번", "지난", "것이다", "것으로", "것을", "것이", "것은", "경우", "모든", "정도", "이후", "이전", "지금", "다시", "따라", "부터", "까지", "에게", "에서", "그리고", "하지만", "또한", "매우", "가장", "이미", "결국", "항상", "종종"
 }
 
 class TextProcessor:
@@ -29,7 +31,6 @@ class TextProcessor:
         text = re.sub(r'http\S+|www\.\S+', '', text)
         
         # 3. 특수문자 제거 (일부 보존하고 싶은 문자는 제외 가능) 및 줄바꿈 정리
-        # 알파벳, 한글, 숫자, 공백, 기본 문장부호만 남김
         text = re.sub(r'[^a-zA-Z0-9가-힣\s.,!?\'"]', '', text)
         
         # 4. 다중 공백 및 줄바꿈을 공백 하나로 통일
@@ -41,22 +42,24 @@ class TextProcessor:
     def extract_keywords(text: str, top_n: int = 5) -> List[str]:
         """
         [BoW] 빈도수 기반 키워드 추출
-        1. 소문자 변환
-        2. 토큰화 (단어 단위 분리)
-        3. 불용어(Stopwords) 제거
-        4. 빈도수 상위 N개 추출
         """
         if not text:
             return []
             
-        # 소문자 변환 및 토큰화 (알파벳/한글 단어만 추출)
-        words = re.findall(r'\b[a-zA-Z가-힣]{2,}\b', text.lower())
+        # 소문자 변환 및 토큰화
+        all_words = re.findall(r'\b[a-zA-Z가-힣]{2,}\b', text.lower())
         
-        # 불용어 필터링
-        meaningful_words = [w for w in words if w not in STOPWORDS]
+        meaningful_words = []
+        for w in all_words:
+            # 영어인 경우 (알파벳 포함)
+            if re.match(r'[a-z]', w):
+                if len(w) < 3 or w in ENGLISH_STOPWORDS:
+                    continue
+            # 한국어인 경우
+            else:
+                if w in KOREAN_STOPWORDS:
+                    continue
+            meaningful_words.append(w)
         
-        # 빈도수 계산 (BoW 개념)
         counter = Counter(meaningful_words)
-        
-        # 상위 N개 반환
         return [word for word, count in counter.most_common(top_n)]

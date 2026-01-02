@@ -22,10 +22,10 @@ export function SearchHero({ onSearch, isLoading }: SearchHeroProps) {
     <div className="flex flex-col items-center justify-center py-16 md:py-24 space-y-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="space-y-4 max-w-3xl">
         <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-          Discover the Hidden Insights in News
+          뉴스의 숨겨진 통찰력을 발견하세요
         </h1>
         <p className="text-xl text-muted-foreground max-w-[600px] mx-auto">
-          AI-powered analysis to summarize trends and sentiments from global news sources in seconds.
+          AI 분석을 통해 글로벌 뉴스의 트렌드와 감성을 단 몇 초 만에 파악하세요.
         </p>
       </div>
 
@@ -34,14 +34,14 @@ export function SearchHero({ onSearch, isLoading }: SearchHeroProps) {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search topics (e.g. Tesla, AI, Bitcoin)..."
+            placeholder="주제를 검색하세요 (예: Tesla, AI, 비트코인)..."
             className="pl-9 h-12 text-lg shadow-sm"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
         <Button type="submit" size="lg" className="h-12 px-8" isLoading={isLoading}>
-          Search
+          검색
         </Button>
       </form>
     </div>

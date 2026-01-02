@@ -73,7 +73,7 @@ class NewsAnalyzer:
     def _get_mock_analysis(self, keywords: list[str] = []) -> NewsAnalysisUpdate:
         """UI 테스트용 가짜 분석 결과"""
         if not keywords:
-             keywords = ["Market", "Growth", "Trends", "Analysis", "Future"]
+             keywords = ["시장", "성장", "트렌드", "분석", "미래"]
 
         return NewsAnalysisUpdate(
             summary="1. 이 뉴스는 시장의 긍정적인 신호를 다루고 있습니다.\n2. 주요 지표가 상승세를 보입니다.\n3. 전문가들은 지속적인 성장을 예측합니다.",
