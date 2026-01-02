@@ -1,6 +1,9 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: news-insight-backend
     ports:
       - "8000:8000"
     volumes:
@@ -8,11 +11,22 @@ services:
     env_file:
       - ./backend/.env
     restart: always
+    networks:
+      - news-network
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: news-insight-frontend
     ports:
       - "80:80"
     depends_on:
       - backend
     restart: always
+    networks:
+      - news-network
+
+networks:
+  news-network:
+    driver: bridge

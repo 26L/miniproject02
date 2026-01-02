@@ -1,79 +1,70 @@
-# Docker Deployment Guide (Service & Server Environment)
+# Docker Deployment Guide
 
-본 문서는 **News Insight Pro** 서비스를 Docker를 사용하여 로컬 및 서버 환경에 배포하는 방법을 상세히 설명합니다.
-
----
-
-## 1. 배포 아키텍처 (Deployment Architecture)
-
-Docker Compose를 사용하여 **Frontend(Nginx)** 와 **Backend(FastAPI)** 두 개의 컨테이너를 통합 관리합니다.
-
-- **Frontend Container (`frontend`)**:
-    - `nginx:alpine` 기반
-    - React 정적 빌드 파일(`dist/`) 서빙
-    - 포트 `80` 노출
-    - `/api/v1` 요청을 Backend 컨테이너로 리버스 프록시 (CORS 문제 해결)
-- **Backend Container (`backend`)**:
-    - `python:3.11-slim` 기반
-    - FastAPI 서버 실행 (`uvicorn`)
-    - 포트 `8000` 노출 (내부 통신 및 디버깅용)
-    - SQLite 데이터베이스 파일 볼륨 마운트 (데이터 영구 보존)
+이 문서는 **News Insight Pro**를 도커(Docker) 컨테이너 환경에서 빌드하고 실행하는 방법을 설명합니다. 도커를 사용하면 OS 환경에 상관없이 동일한 실행 환경을 보장받을 수 있습니다.
 
 ---
 
-## 2. 사전 준비 (Prerequisites)
+## 1. 사전 준비 (Prerequisites)
 
-서버(또는 로컬 PC)에 다음 도구들이 설치되어 있어야 합니다.
-
-1.  **Docker Engine:** [설치 가이드](https://docs.docker.com/engine/install/)
-2.  **Docker Compose:** (최신 Docker Desktop/Plugin에는 기본 포함)
-3.  **Git:** 소스 코드 다운로드용
+- **Docker Desktop** 설치 및 실행 (Windows/Mac)
+- **Docker & Docker Compose** 설치 (Linux)
 
 ---
 
-## 3. 배포 설정 (Configuration)
+## 2. 프로젝트 구성
 
-### 3.1. 환경 변수 설정
-`backend` 디렉토리 내의 `.env` 파일을 확인하고, 실제 서버용 키 값을 입력합니다.
+본 프로젝트는 두 개의 서비스로 구성됩니다.
+- **Backend (API):** Python FastAPI (`news-insight-backend`) - Port 8000
+- **Frontend (UI):** React + Nginx (`news-insight-frontend`) - Port 80
 
+---
+
+## 3. 실행 방법 (Quick Start)
+
+터미널에서 프로젝트 루트 디렉토리로 이동한 후 아래 명령어를 실행합니다.
+
+### 3.1. 서비스 빌드 및 실행
 ```bash
-# backend/.env
-OPENAI_API_KEY="sk-..."
-NEWS_API_KEY="..."
-DATABASE_URL="sqlite:///./news_insight.db"
+docker-compose up --build -d
+```
+- `-d`: 백그라운드에서 실행 (Detached mode)
+
+### 3.2. 서비스 중지
+```bash
+docker-compose down
 ```
 
-### 3.2. 프론트엔드 환경 설정
-`frontend/.env.production` 파일이 자동으로 사용됩니다. Nginx 프록시를 사용하므로 상대 경로로 설정되어 있습니다.
+---
+
+## 4. 환경 변수 설정
+
+도커 실행 전 `backend/.env` 파일에 유효한 API 키가 설정되어 있어야 합니다.
 
 ```env
-# frontend/.env.production
-VITE_API_BASE_URL=/api/v1
+OPENAI_API_KEY="your_key"
+NEWS_API_KEY="your_key"
+USE_MOCK_DATA=False
+DATABASE_URL="sqlite+aiosqlite:///./news_insight.db"
 ```
 
 ---
 
-## 4. 실행 및 배포 (Execution)
+## 5. 접속 정보
 
-프로젝트 루트(`C:\newsapi\`)에서 다음 명령어를 실행합니다.
+- **Web UI:** [http://localhost](http://localhost) (기본 80 포트)
+- **API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
 
-### 4.1. 서비스 시작 (Start)
-이미지를 빌드하고 백그라운드 모드(`-d`)로 실행합니다.
+---
 
-```bash
-docker-compose up -d --build
-```
+## 6. 주요 특징 및 관리
 
-### 4.2. 상태 확인 (Check Status)
-컨테이너가 정상적으로 실행 중인지 확인합니다.
+### 6.1. 데이터 보존 (Persistence)
+- SQLite 데이터베이스 파일(`news_insight.db`)은 호스트의 `backend/` 폴더와 컨테이너 내부가 볼륨으로 연결되어 있어, 컨테이너를 삭제해도 데이터가 유지됩니다.
 
-```bash
-docker-compose ps
-```
+### 6.2. 프록시 설정 (Nginx)
+- 프론트엔드 컨테이너 내부의 Nginx가 `/api/v1`으로 들어오는 요청을 백엔드 컨테이너의 8000번 포트로 자동 전달합니다.
 
-### 4.3. 로그 확인 (View Logs)
-문제가 발생했을 때 로그를 확인합니다.
-
+### 6.3. 로그 확인
 ```bash
 # 전체 로그 확인
 docker-compose logs -f
@@ -82,45 +73,13 @@ docker-compose logs -f
 docker-compose logs -f backend
 ```
 
-### 4.4. 서비스 중지 (Stop)
-
-```bash
-docker-compose down
-```
-
 ---
 
-## 5. 접속 방법 (Access)
+## 7. 트러블슈팅 (Troubleshooting)
 
-- **웹 서비스 (Frontend):** `http://localhost` (또는 서버 IP)
-    - 사용자는 이 주소로 접속하여 모든 기능을 사용합니다.
-- **API 문서 (Backend):** `http://localhost:8000/docs`
-    - 개발 및 디버깅 목적으로 접근 가능합니다.
-
----
-
-## 6. 데이터 관리 (Data Persistence)
-
-`docker-compose.yml` 설정에 의해 백엔드의 SQLite 데이터베이스 파일은 호스트 시스템과 동기화됩니다.
-
-- **호스트 경로:** `./backend/news_insight.db`
-- **컨테이너 경로:** `/app/news_insight.db`
-
-컨테이너를 삭제(`down`)했다가 다시 실행해도 **데이터는 보존**됩니다.
+1. **포트 충돌:** 만약 로컬에서 이미 80번이나 8000번 포트를 사용 중이라면, `docker-compose.yml`에서 왼쪽 포트 번호를 수정하세요 (예: `"8080:80"`).
+2. **API 키 오류:** 실데이터 모드에서 분석이 안 된다면 `docker-compose logs backend`를 통해 API 키 인증 오류가 발생하는지 확인하세요.
+3. **변경 사항 미반영:** 코드를 수정했는데 컨테이너에 반영되지 않는다면 `--build` 옵션을 붙여 다시 실행하세요.
 
 ---
-
-## 7. 문제 해결 (Troubleshooting)
-
-**Q. API 요청 시 502 Bad Gateway 에러가 뜹니다.**
-- 백엔드 컨테이너가 아직 부팅 중일 수 있습니다. `docker-compose logs -f backend`로 "Application startup complete" 메시지가 떴는지 확인하세요.
-
-**Q. "Vite" 관련 빌드 에러가 발생합니다.**
-- 로컬의 `node_modules`가 도커 빌드 컨텍스트에 포함되어 충돌할 수 있습니다. `.dockerignore` 파일에 `node_modules`가 포함되어 있는지 확인하거나, 로컬 `node_modules` 삭제 후 다시 빌드해 보세요.
-
-**Q. DB 데이터가 저장되지 않습니다.**
-- `docker-compose.yml`의 `volumes` 섹션이 올바른지 확인하세요.
-
----
-**작성일:** 2026-01-02
-**작성자:** Gemini Agent
+최종 수정일: 2026-01-02
