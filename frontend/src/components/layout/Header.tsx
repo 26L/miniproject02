@@ -1,11 +1,10 @@
-import { Newspaper, FileText, Settings, User } from 'lucide-react';
+import { Newspaper, FileText, User } from 'lucide-react';
 
 interface HeaderProps {
   onProfileClick?: () => void;
-  onSettingsClick?: () => void;
 }
 
-export function Header({ onProfileClick, onSettingsClick }: HeaderProps) {
+export function Header({ onProfileClick }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full gradient-header shadow-md">
       <div className="container flex h-16 max-w-screen-xl items-center justify-between px-4 md:px-8">
@@ -28,20 +27,11 @@ export function Header({ onProfileClick, onSettingsClick }: HeaderProps) {
             <FileText className="h-5 w-5" />
           </a>
           
-          {/* Settings Button */}
-          <button
-            onClick={onSettingsClick}
-            className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all"
-            aria-label="설정"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
-          
           {/* Profile Button */}
           <button
             onClick={onProfileClick}
             className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/10 border border-white/20 hover:bg-white/20 transition-all p-0.5"
-            aria-label="프로필"
+            aria-label="프로필 설정"
           >
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#48CAE4] to-[#00A8E8] flex items-center justify-center text-white">
               <User className="h-4 w-4" />

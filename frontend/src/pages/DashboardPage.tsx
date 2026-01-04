@@ -227,7 +227,6 @@ export function DashboardPage() {
       {/* Header */}
       <Header 
         onProfileClick={() => setIsProfileModalOpen(true)}
-        onSettingsClick={() => setIsProfileModalOpen(true)}
       />
 
       {/* Search Area */}
