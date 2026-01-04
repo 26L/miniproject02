@@ -1,53 +1,51 @@
-import type { NewsItem } from '@/types';
+import { TrendingUp, RefreshCw } from 'lucide-react';
 
-interface TrendPanelProps {
-  items: NewsItem[];
+interface TrendKeywordsPanelProps {
+  keywords: string[];
+  onKeywordClick: (keyword: string) => void;
+  onRefresh: () => void;
+  isLoading?: boolean;
 }
 
-export function TrendPanel({ items }: TrendPanelProps) {
-  // Simple keyword frequency calculation
-  const allKeywords = items.flatMap(item => item.keywords || []);
-  const frequency: Record<string, number> = {};
-  
-  allKeywords.forEach(k => {
-    frequency[k] = (frequency[k] || 0) + 1;
-  });
-
-  const topKeywords = Object.entries(frequency)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 10);
-
+export function TrendKeywordsPanel({ keywords, onKeywordClick, onRefresh, isLoading }: TrendKeywordsPanelProps) {
   return (
-    <div className="bg-card text-card-foreground rounded-xl border p-6 space-y-6">
-      <div>
-        <h3 className="font-semibold text-lg mb-2">인기 키워드</h3>
-        <div className="flex flex-wrap gap-2">
-          {topKeywords.map(([word, count]) => (
-            <span key={word} className="bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm">
-              {word} <span className="text-xs text-muted-foreground ml-1">{count}</span>
-            </span>
+    <section className="bg-white rounded-xl shadow-md mb-6 overflow-hidden transition-all hover:shadow-lg">
+      {/* Panel Header */}
+      <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-gradient-to-r from-primary/5 to-[#023E8A]/5">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-primary" />
+          인기 키워드
+        </h3>
+        <button
+          onClick={onRefresh}
+          disabled={isLoading}
+          className="p-2 text-primary hover:bg-primary/10 rounded-md transition-all hover:rotate-180 disabled:opacity-50"
+          aria-label="키워드 새로고침"
+        >
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+
+      {/* Panel Content */}
+      <div className="p-5">
+        <div className="flex flex-wrap gap-2.5" role="list">
+          {keywords.map((keyword, index) => (
+            <button
+              key={`${keyword}-${index}`}
+              onClick={() => onKeywordClick(keyword)}
+              className="gradient-primary text-white px-4 py-2 rounded-full text-xs font-medium cursor-pointer transition-all hover:translate-y-[-2px] hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+              role="listitem"
+            >
+              {keyword}
+            </button>
           ))}
-          {topKeywords.length === 0 && <span className="text-muted-foreground text-sm">데이터 없음</span>}
+          {keywords.length === 0 && (
+            <span className="text-muted-foreground text-sm">
+              {isLoading ? '로딩 중...' : '키워드 없음'}
+            </span>
+          )}
         </div>
       </div>
-      
-      <div>
-        <h3 className="font-semibold text-lg mb-2">시장 감정 분포</h3>
-        <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-                <span>긍정</span>
-                <span className="text-green-600 font-bold">{items.filter(i => i.sentiment_label === 'positive').length}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-                <span>부정</span>
-                <span className="text-red-600 font-bold">{items.filter(i => i.sentiment_label === 'negative').length}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-                <span>중립</span>
-                <span className="text-gray-600 font-bold">{items.filter(i => i.sentiment_label === 'neutral').length}</span>
-            </div>
-        </div>
-      </div>
-    </div>
+    </section>
   );
 }

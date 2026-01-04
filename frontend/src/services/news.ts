@@ -2,7 +2,7 @@ import { apiClient } from './api';
 import type { NewsItem } from '@/types';
 import { DUMMY_NEWS } from './dummyData';
 
-const USE_DUMMY_DATA = false;
+const USE_DUMMY_DATA = true;
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
