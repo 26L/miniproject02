@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.db.database import engine, Base
-from app.api.endpoints import news
+from app.api.endpoints import news, auth
 
 # 앱 수명주기 관리 (DB 테이블 생성)
 @asynccontextmanager
@@ -31,7 +31,11 @@ app.add_middleware(
         "http://localhost",
         "http://127.0.0.1",
         "http://localhost:80",
-        "http://127.0.0.1:80"
+        "http://127.0.0.1:80",
+        # 샌드박스 환경
+        "https://5177-i25k7g1l0xke9b7aqvipz-583b4d74.sandbox.novita.ai",
+        "https://5176-i25k7g1l0xke9b7aqvipz-583b4d74.sandbox.novita.ai",
+        "https://5173-i25k7g1l0xke9b7aqvipz-583b4d74.sandbox.novita.ai",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -39,6 +43,7 @@ app.add_middleware(
 )
 
 # 라우터 등록
+app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["authentication"])
 app.include_router(news.router, prefix=f"{settings.API_V1_STR}/news", tags=["news"])
 
 @app.get("/")

@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Poppins', 'Noto Sans KR', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -47,11 +50,30 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Ocean Blue Theme Colors
+        ocean: {
+          primary: '#0077B6',
+          'primary-light': '#00A8E8',
+          'primary-dark': '#005f8f',
+          secondary: '#023E8A',
+          'secondary-light': '#0096C7',
+          accent: '#48CAE4',
+          'accent-light': '#90E0EF',
+        },
+        success: '#10B981',
+        warning: '#F59E0B',
+        error: '#EF4444',
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "1rem",
+      },
+      boxShadow: {
+        'ocean-sm': '0 1px 2px rgba(0, 0, 0, 0.05)',
+        'ocean-md': '0 4px 12px rgba(0, 0, 0, 0.08)',
+        'ocean-lg': '0 8px 24px rgba(0, 0, 0, 0.1)',
       },
     },
   },

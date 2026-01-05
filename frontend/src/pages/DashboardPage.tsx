@@ -1,124 +1,321 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { newsApi } from '@/services/news';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { SearchHero } from '@/features/dashboard/SearchHero';
+import { newsApi, type SearchParams } from '@/services/news';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { SearchArea } from '@/features/dashboard/SearchArea';
+import { ProfilePanel, type UserProfile } from '@/features/dashboard/ProfilePanel';
+import { TodayNewsPanel, type TodayNewsItem } from '@/features/dashboard/TodayNewsPanel';
+import { TrendKeywordsPanel } from '@/features/dashboard/TrendPanel';
+import { SentimentPanel, type SentimentData } from '@/features/dashboard/SentimentPanel';
 import { NewsGrid } from '@/features/dashboard/NewsGrid';
-import { TrendPanel } from '@/features/dashboard/TrendPanel';
+import { ProfileModal } from '@/features/dashboard/ProfileModal';
+import { LoginModal } from '@/features/auth/LoginModal';
+import { RegisterModal } from '@/features/auth/RegisterModal';
+import type { NewsItem } from '@/types';
 
-/**
- * DashboardPage: 앱의 메인 대화형 페이지입니다.
- * 이 안에서 뉴스 목록을 불러오고, 검색하고, AI 분석을 요청하는 모든 일이 일어납니다.
- */
+// Default profile data
+const DEFAULT_PROFILE: UserProfile = {
+  name: '사용자',
+  email: 'user@example.com',
+  avatar: null,
+  interests: ['technology', 'economy', 'society'],
+  stats: {
+    searches: 0,
+    bookmarks: 0,
+    readArticles: 0,
+  },
+};
+
+// Today's news mock data
+const TODAY_NEWS: TodayNewsItem[] = [
+  { id: 1, title: '2024년 경제 전망, 전문가들의 분석', source: '매일경제', date: '오늘' },
+  { id: 2, title: 'AI 기술 발전이 일상에 미치는 영향', source: 'IT동아', date: '오늘' },
+  { id: 3, title: '글로벌 기후 변화 대응 정책 논의', source: '한국일보', date: '오늘' },
+  { id: 4, title: '국내 스타트업 투자 동향 분석', source: '조선비즈', date: '오늘' },
+  { id: 5, title: '헬스케어 산업의 디지털 전환 가속화', source: 'SBS뉴스', date: '오늘' },
+];
+
+// Trending keywords
+const DEFAULT_KEYWORDS = [
+  '인공지능', '기후변화', '경제정책', '반도체', '전기차',
+  '메타버스', '블록체인', '헬스케어', '부동산', '금리',
+  '환율', '증시', 'AI 규제', '탄소중립', '디지털전환'
+];
+
 export function DashboardPage() {
-  // queryClient: 이미 가져온 데이터를 수동으로 업데이트할 때 사용합니다.
   const queryClient = useQueryClient();
 
-  // useState: 리액트의 '기억 장치'입니다. 현재 어떤 뉴스를 분석 중인지 ID를 저장합니다.
+  // State
   const [analyzingId, setAnalyzingId] = useState<number | null>(null);
+  const [bookmarkedIds, setBookmarkedIds] = useState<number[]>([]);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
+  const [todayNews, setTodayNews] = useState<TodayNewsItem[]>(TODAY_NEWS);
+  const [trendKeywords, setTrendKeywords] = useState<string[]>(DEFAULT_KEYWORDS.slice(0, 8));
+  const [isKeywordsLoading, setIsKeywordsLoading] = useState(false);
+  const [isTodayNewsLoading, setIsTodayNewsLoading] = useState(false);
+  // searchQuery is used by child components when clicking keywords or today's news
+  const [_searchQuery, setSearchQuery] = useState('');
 
-  /**
-   * 1. 데이터 가져오기 (GET) - useQuery
-   * 페이지가 열리자마자 백엔드에서 최신 뉴스 20개를 가져옵니다.
-   * data: 결과값, isLoading: 로딩 여부, error: 에러 정보가 자동으로 담깁니다.
-   */
+  // Load profile and API keys from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('newsAnalyzerProfile');
+    if (saved) {
+      try {
+        setProfile({ ...DEFAULT_PROFILE, ...JSON.parse(saved) });
+      } catch (e) {
+        console.error('Failed to load profile:', e);
+      }
+    }
+
+    const savedBookmarks = localStorage.getItem('newsAnalyzerBookmarks');
+    if (savedBookmarks) {
+      try {
+        setBookmarkedIds(JSON.parse(savedBookmarks));
+      } catch (e) {
+        console.error('Failed to load bookmarks:', e);
+      }
+    }
+  }, []);
+
+  // Save profile to localStorage
+  const saveProfile = useCallback((newProfile: UserProfile) => {
+    setProfile(newProfile);
+    localStorage.setItem('newsAnalyzerProfile', JSON.stringify(newProfile));
+  }, []);
+
+  // Fetch news
   const { data: newsItems = [], isLoading: isInitialLoading, error } = useQuery({
-    queryKey: ['news', 'latest'], // 이 요청의 고유 이름
-    queryFn: () => newsApi.getAll(20), // 실제 실행할 함수
+    queryKey: ['news', 'latest'],
+    queryFn: () => newsApi.getAll(20),
   });
 
-  /**
-   * 2. 검색하기 (POST/Action) - useMutation
-   * 사용자가 검색 버튼을 눌렀을 때만 실행되는 '액션'입니다.
-   */
+  // Search mutation
   const searchMutation = useMutation({
-    mutationFn: newsApi.search,
+    mutationFn: (params: SearchParams) => newsApi.search(params),
     onSuccess: (data) => {
-      // 검색이 성공하면, 기존 뉴스 목록 데이터를 검색 결과로 바꿔치기합니다.
       queryClient.setQueryData(['news', 'latest'], data);
-    },
-  });
-
-  /**
-   * 3. AI 분석하기 (POST/Update) - useMutation
-   * 특정 뉴스의 분석 버튼을 눌렀을 때 실행됩니다.
-   */
-  const analyzeMutation = useMutation({
-    mutationFn: newsApi.analyze,
-    onMutate: (id) => {
-      // 분석 시작 시, 현재 분석 중인 ID를 저장하여 버튼에 로딩 표시를 합니다.
-      setAnalyzingId(id);
-    },
-    onSuccess: (updatedNews) => {
-      // 분석이 끝나면, 전체 뉴스 목록 중에서 해당 뉴스만 새 데이터(요약 등)로 교체합니다.
-      queryClient.setQueryData(['news', 'latest'], (oldData: any[]) => {
-        return oldData?.map((item) => 
-          item.id === updatedNews.id ? updatedNews : item
-        );
+      // Update search stats
+      setProfile(prev => {
+        const updated = { ...prev, stats: { ...prev.stats, searches: prev.stats.searches + 1 } };
+        localStorage.setItem('newsAnalyzerProfile', JSON.stringify(updated));
+        return updated;
       });
     },
-    onSettled: () => {
-      // 성공하든 실패하든 로딩 상태를 해제합니다.
-      setAnalyzingId(null);
-    }
   });
 
-  // 검색 실행 함수
-  const handleSearch = (query: string) => {
-    searchMutation.mutate(query);
+  // Analyze mutation
+  const analyzeMutation = useMutation({
+    mutationFn: newsApi.analyze,
+    onMutate: (id) => setAnalyzingId(id),
+    onSuccess: (updatedNews) => {
+      queryClient.setQueryData(['news', 'latest'], (oldData: NewsItem[]) => 
+        oldData?.map((item) => item.id === updatedNews.id ? updatedNews : item)
+      );
+    },
+    onSettled: () => setAnalyzingId(null),
+  });
+
+  // Event handlers
+  const handleSearch = (query: string, category: string, dateRange: string) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      // 카테고리와 기간 필터를 함께 전달
+      searchMutation.mutate({ query, category, dateRange });
+    }
   };
 
-  // 분석 실행 함수
   const handleAnalyze = (id: number) => {
     analyzeMutation.mutate(id);
   };
 
-  return (
-    <MainLayout>
-      {/* 상단 검색 영역 */}
-      <SearchHero 
-        onSearch={handleSearch} 
-        isLoading={searchMutation.isPending} 
-      />
+  const handleBookmark = (id: number) => {
+    setBookmarkedIds(prev => {
+      const updated = prev.includes(id) 
+        ? prev.filter(i => i !== id) 
+        : [...prev, id];
+      localStorage.setItem('newsAnalyzerBookmarks', JSON.stringify(updated));
       
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight">최신 뉴스</h2>
+      // Update bookmark stats if adding
+      if (!prev.includes(id)) {
+        setProfile(p => {
+          const updatedProfile = { ...p, stats: { ...p.stats, bookmarks: p.stats.bookmarks + 1 } };
+          localStorage.setItem('newsAnalyzerProfile', JSON.stringify(updatedProfile));
+          return updatedProfile;
+        });
+      }
+      
+      return updated;
+    });
+  };
+
+  const handleShare = async (id: number) => {
+    const news = newsItems.find(n => n.id === id);
+    if (!news) return;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: news.title,
+          text: news.summary || news.content.substring(0, 100),
+          url: news.url,
+        });
+      } catch (e) {
+        console.error('Share failed:', e);
+      }
+    } else {
+      await navigator.clipboard.writeText(news.url);
+      alert('링크가 복사되었습니다');
+    }
+  };
+
+  const handleTodayNewsClick = (title: string) => {
+    const keywords = title.split(' ').slice(0, 3).join(' ');
+    setSearchQuery(keywords);
+    searchMutation.mutate({ query: keywords });
+  };
+
+  const handleKeywordClick = (keyword: string) => {
+    setSearchQuery(keyword);
+    searchMutation.mutate({ query: keyword });
+  };
+
+  const refreshTodayNews = async () => {
+    setIsTodayNewsLoading(true);
+    await new Promise(r => setTimeout(r, 500));
+    setTodayNews([...TODAY_NEWS].sort(() => Math.random() - 0.5));
+    setIsTodayNewsLoading(false);
+  };
+
+  const refreshKeywords = async () => {
+    setIsKeywordsLoading(true);
+    await new Promise(r => setTimeout(r, 300));
+    setTrendKeywords(DEFAULT_KEYWORDS.sort(() => Math.random() - 0.5).slice(0, 8));
+    setIsKeywordsLoading(false);
+  };
+
+  // Calculate sentiment data
+  const sentimentData: SentimentData = {
+    positive: newsItems.filter(i => i.sentiment_label === 'positive').length,
+    neutral: newsItems.filter(i => i.sentiment_label === 'neutral').length,
+    negative: newsItems.filter(i => i.sentiment_label === 'negative').length,
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background font-sans antialiased">
+      {/* Header */}
+      <Header 
+        onProfileClick={() => setIsProfileModalOpen(true)}
+        onLoginClick={() => setIsLoginModalOpen(true)}
+      />
+
+      {/* Search Area */}
+      <SearchArea 
+        onSearch={handleSearch}
+        isLoading={searchMutation.isPending}
+      />
+
+      {/* Main Content */}
+      <main className="flex-1 py-8">
+        <div className="container max-w-screen-xl px-4 md:px-8">
+          {isInitialLoading ? (
+            <div className="text-center py-20 text-muted-foreground">
+              <div className="inline-block w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
+              <p>뉴스를 불러오는 중...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-20 text-destructive bg-destructive/10 rounded-xl">
+              <p className="font-semibold">뉴스 로딩 실패</p>
+              <p className="text-sm mt-2">
+                {(error as any)?.message || '알 수 없는 오류'}
+              </p>
+            </div>
+          ) : (
+            /* 2-Column Layout: Left = Sidebar, Right = Results */
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column: Recommend Section */}
+              <aside className="lg:col-span-1 order-first lg:order-first">
+                <div className="lg:sticky lg:top-24 space-y-0">
+                  {/* Profile Panel */}
+                  <ProfilePanel 
+                    profile={profile}
+                    onEditClick={() => setIsProfileModalOpen(true)}
+                  />
+
+                  {/* Today's News */}
+                  <TodayNewsPanel
+                    items={todayNews}
+                    onItemClick={handleTodayNewsClick}
+                    onRefresh={refreshTodayNews}
+                    isLoading={isTodayNewsLoading}
+                  />
+
+                  {/* Trend Keywords */}
+                  <TrendKeywordsPanel
+                    keywords={trendKeywords}
+                    onKeywordClick={handleKeywordClick}
+                    onRefresh={refreshKeywords}
+                    isLoading={isKeywordsLoading}
+                  />
+
+                  {/* Sentiment Analysis */}
+                  <SentimentPanel
+                    data={sentimentData}
+                    total={newsItems.length}
+                  />
+                </div>
+              </aside>
+
+              {/* Right Column: Search Results */}
+              <section className="lg:col-span-2">
+                <NewsGrid
+                  items={newsItems}
+                  onAnalyze={handleAnalyze}
+                  onBookmark={handleBookmark}
+                  onShare={handleShare}
+                  analyzingId={analyzingId}
+                  bookmarkedIds={bookmarkedIds}
+                  resultCount={newsItems.length}
+                />
+              </section>
+            </div>
+          )}
         </div>
-        
-        {/* 1. 로딩 중일 때 보여줄 화면 */}
-        {isInitialLoading ? (
-           <div className="text-center py-20 text-muted-foreground">뉴스 불러오는 중...</div>
-        ) : 
-        /* 2. 에러가 났을 때 보여줄 화면 */
-        error ? (
-           <div className="text-center py-20 text-destructive bg-destructive/10 rounded-xl">
-             <p className="font-semibold">뉴스 로딩 실패</p>
-             <p className="text-sm">
-               {(error as any)?.message || '알 수 없는 오류'}
-               {(error as any)?.response?.status && ` (상태 코드: ${(error as any).response.status})`}
-             </p>
-           </div>
-        ) : (
-          /* 3. 정상적으로 데이터를 가져왔을 때의 2단 레이아웃 */
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* 좌측: 뉴스 카드 목록 (2/3 너비) */}
-            <div className="lg:col-span-2">
-              <NewsGrid 
-                items={newsItems} 
-                onAnalyze={handleAnalyze} 
-                analyzingId={analyzingId}
-              />
-            </div>
-            {/* 우측: 트렌드 통계 패널 (1/3 너비, 화면에 고정) */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-24">
-                <TrendPanel items={newsItems} />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </MainLayout>
+      </main>
+
+      {/* Footer */}
+      <Footer />
+
+      {/* Profile Modal */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        profile={profile}
+        onSave={saveProfile}
+      />
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSwitchToRegister={() => {
+          setIsLoginModalOpen(false);
+          setIsRegisterModalOpen(true);
+        }}
+      />
+
+      {/* Register Modal */}
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+        onSwitchToLogin={() => {
+          setIsRegisterModalOpen(false);
+          setIsLoginModalOpen(true);
+        }}
+      />
+    </div>
   );
 }

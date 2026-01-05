@@ -1,58 +1,71 @@
 import { apiClient } from './api';
 import type { NewsItem } from '@/types';
-import { DUMMY_NEWS } from './dummyData';
 
-const USE_DUMMY_DATA = false;
+// 검색 파라미터 인터페이스
+export interface SearchParams {
+  query: string;
+  category?: string;
+  dateRange?: string;
+}
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
+/**
+ * News API Service
+ * 모든 뉴스 관련 API 호출을 백엔드를 통해 처리합니다.
+ * 백엔드가 NewsAPI 및 OpenAI API와 통신하며, API 키는 서버 측에서 관리됩니다.
+ */
 export const newsApi = {
-  search: async (query: string): Promise<NewsItem[]> => {
-    if (USE_DUMMY_DATA) {
-      await delay(600);
-      const lowerQuery = query.toLowerCase();
-      return DUMMY_NEWS.filter(item => 
-        item.title.toLowerCase().includes(lowerQuery) || 
-        (item.summary && item.summary.toLowerCase().includes(lowerQuery)) ||
-        item.content.toLowerCase().includes(lowerQuery)
-      );
+  /**
+   * 뉴스 검색
+   * 백엔드 POST /api/v1/news/search 엔드포인트 호출
+   * 백엔드에서 NewsAPI를 통해 뉴스를 검색하고 DB에 저장합니다.
+   */
+  search: async (params: SearchParams | string): Promise<NewsItem[]> => {
+    const searchParams: SearchParams = typeof params === 'string' 
+      ? { query: params } 
+      : params;
+    
+    try {
+      const response = await apiClient.post<NewsItem[]>('/news/search', null, {
+        params: {
+          query: searchParams.query,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Backend search error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.detail || '뉴스 검색에 실패했습니다.');
     }
-    const response = await apiClient.post<NewsItem[]>('/news/search', null, {
-      params: { query },
-    });
-    return response.data;
   },
 
-  getAll: async (limit = 100, offset = 0): Promise<NewsItem[]> => {
-    if (USE_DUMMY_DATA) {
-      await delay(800);
-      return DUMMY_NEWS;
+  /**
+   * 저장된 뉴스 목록 조회
+   * 백엔드 GET /api/v1/news 엔드포인트 호출
+   * DB에 저장된 뉴스를 최신순으로 조회합니다.
+   */
+  getAll: async (limit = 20, offset = 0): Promise<NewsItem[]> => {
+    try {
+      const response = await apiClient.get<NewsItem[]>('/news', {
+        params: { skip: offset, limit },
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Backend getAll error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.detail || '뉴스 목록을 불러오는데 실패했습니다.');
     }
-    const response = await apiClient.get<NewsItem[]>('/news', {
-      params: { limit, offset },
-    });
-    return response.data;
   },
 
+  /**
+   * AI 분석 요청
+   * 백엔드 POST /api/v1/news/analysis/{id} 엔드포인트 호출
+   * 백엔드에서 OpenAI API를 사용하여 뉴스를 분석하고 DB를 업데이트합니다.
+   */
   analyze: async (id: number): Promise<NewsItem> => {
-    if (USE_DUMMY_DATA) {
-      await delay(1500);
-      const item = DUMMY_NEWS.find(n => n.id === id);
-      if (!item) throw new Error("Item not found");
-      
-      // Simulate analysis result if not already present
-      // For the item without summary (id 3), let's "generate" one
-      if (id === 3 && !item.summary) {
-         return {
-             ...item,
-             summary: "Analysis complete: The traffic situation was caused by multiple system failures. Authorities are working on a resolution.",
-             sentiment_label: "negative",
-             sentiment_score: -0.8
-         };
-      }
-      return item;
+    try {
+      const response = await apiClient.post<NewsItem>(`/news/analysis/${id}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Backend analysis error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.detail || 'AI 분석에 실패했습니다.');
     }
-    const response = await apiClient.post<NewsItem>(`/news/analysis/${id}`);
-    return response.data;
   },
 };
