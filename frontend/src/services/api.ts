@@ -19,15 +19,27 @@ export const getApiKeys = (): ApiKeys => {
   return { newsApiKey: '', openAiApiKey: '' };
 };
 
-// API 키 유효성 체크 (설정 여부)
-export const hasValidApiKeys = (): boolean => {
+// News API 키만 있으면 뉴스 검색 가능
+export const hasNewsApiKey = (): boolean => {
   const keys = getApiKeys();
-  return !!(keys.newsApiKey && keys.openAiApiKey);
+  return !!keys.newsApiKey;
 };
 
-// 초기 설정: 환경 변수 또는 로컬 주소 사용
+// OpenAI API 키가 있으면 AI 분석 가능
+export const hasOpenAiApiKey = (): boolean => {
+  const keys = getApiKeys();
+  return !!keys.openAiApiKey;
+};
+
+// API 키 유효성 체크 (설정 여부) - 뉴스 API 키만 있어도 실시간 모드
+export const hasValidApiKeys = (): boolean => {
+  return hasNewsApiKey();
+};
+
+// 초기 설정: 백엔드 API 또는 로컬 주소 사용
 const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
+// 백엔드 API 클라이언트
 export const apiClient = axios.create({
   baseURL,
   headers: {
@@ -35,12 +47,19 @@ export const apiClient = axios.create({
   },
 });
 
-// 요청 인터셉터: API 키를 헤더에 추가
+// NewsAPI 직접 호출 클라이언트
+export const newsApiClient = axios.create({
+  baseURL: 'https://newsapi.org/v2',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 백엔드 요청 인터셉터: API 키를 헤더에 추가
 apiClient.interceptors.request.use(
   (config) => {
     const apiKeys = getApiKeys();
     
-    // API 키가 있으면 헤더에 추가
     if (apiKeys.newsApiKey) {
       config.headers['X-News-Api-Key'] = apiKeys.newsApiKey;
     }
@@ -61,7 +80,6 @@ apiClient.interceptors.response.use(
   (error) => {
     console.error('API Error:', error);
     
-    // API 키 관련 에러 처리
     if (error.response?.status === 401) {
       console.error('API Key authentication failed. Please check your API keys.');
     }
@@ -70,23 +88,30 @@ apiClient.interceptors.response.use(
   }
 );
 
-// API 키 검증 함수 (백엔드에 실제 검증 요청)
+// API 키 검증 함수
 export const validateApiKey = async (keyType: 'news' | 'openai', apiKey: string): Promise<boolean> => {
-  try {
-    const response = await apiClient.post('/validate-key', {
-      key_type: keyType,
-      api_key: apiKey,
-    });
-    return response.data?.valid === true;
-  } catch (error) {
-    // 백엔드 엔드포인트가 없으면 기본 검증 (키 형식 체크)
-    if (keyType === 'news') {
-      // NewsAPI 키는 32자 영숫자
+  if (keyType === 'news') {
+    // NewsAPI 키 검증: 실제 API 호출로 테스트
+    try {
+      const response = await axios.get('https://newsapi.org/v2/top-headlines', {
+        params: {
+          apiKey: apiKey,
+          country: 'us',
+          pageSize: 1,
+        },
+      });
+      return response.data?.status === 'ok';
+    } catch (error: any) {
+      // 401 에러면 키가 잘못됨
+      if (error.response?.status === 401) {
+        return false;
+      }
+      // 다른 에러(네트워크 등)면 형식만 체크
       return /^[a-zA-Z0-9]{32}$/.test(apiKey);
-    } else if (keyType === 'openai') {
-      // OpenAI 키는 sk-로 시작하고 충분한 길이
-      return apiKey.startsWith('sk-') && apiKey.length >= 40;
     }
-    return false;
+  } else if (keyType === 'openai') {
+    // OpenAI 키는 형식만 체크 (실제 호출은 비용 발생)
+    return apiKey.startsWith('sk-') && apiKey.length >= 40;
   }
+  return false;
 };

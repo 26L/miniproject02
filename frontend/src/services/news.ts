@@ -1,4 +1,5 @@
-import { apiClient, hasValidApiKeys } from './api';
+import axios from 'axios';
+import { apiClient, getApiKeys, hasValidApiKeys, hasOpenAiApiKey } from './api';
 import type { NewsItem } from '@/types';
 import { DUMMY_NEWS } from './dummyData';
 
@@ -14,10 +15,71 @@ export interface SearchParams {
   dateRange?: string;
 }
 
+// 날짜 범위 계산 함수
+const getDateRange = (dateRange?: string): { from: string; to: string } => {
+  const now = new Date();
+  const to = now.toISOString().split('T')[0]; // 오늘 날짜 (YYYY-MM-DD)
+  let from = to;
+  
+  switch (dateRange) {
+    case 'today':
+      from = to;
+      break;
+    case 'week':
+      const weekAgo = new Date(now);
+      weekAgo.setDate(now.getDate() - 7);
+      from = weekAgo.toISOString().split('T')[0];
+      break;
+    case 'month':
+      const monthAgo = new Date(now);
+      monthAgo.setMonth(now.getMonth() - 1);
+      from = monthAgo.toISOString().split('T')[0];
+      break;
+    case 'year':
+      const yearAgo = new Date(now);
+      yearAgo.setFullYear(now.getFullYear() - 1);
+      from = yearAgo.toISOString().split('T')[0];
+      break;
+    default:
+      // 기본값: 최근 7일
+      const defaultAgo = new Date(now);
+      defaultAgo.setDate(now.getDate() - 7);
+      from = defaultAgo.toISOString().split('T')[0];
+  }
+  
+  return { from, to };
+};
+
+// NewsAPI 응답을 NewsItem으로 변환
+const convertNewsApiResponse = (articles: any[]): NewsItem[] => {
+  return articles.map((article, index) => ({
+    id: index + 1,
+    title: article.title || '제목 없음',
+    url: article.url || '',
+    content: article.content || article.description || '',
+    image_url: article.urlToImage || null,
+    summary: article.description || null,
+    sentiment_label: null, // AI 분석 전
+    sentiment_score: null,
+    keywords: extractKeywords(article.title, article.description),
+    published_at: article.publishedAt || new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  }));
+};
+
+// 간단한 키워드 추출 (제목과 설명에서)
+const extractKeywords = (title: string, description: string): string[] => {
+  const text = `${title || ''} ${description || ''}`.toLowerCase();
+  const stopWords = ['the', 'a', 'an', 'is', 'are', 'was', 'were', 'to', 'of', 'in', 'for', 'on', 'with', 'as', 'by', 'at', 'and', 'or', 'but'];
+  const words = text.match(/\b[a-zA-Z가-힣]{3,}\b/g) || [];
+  const filtered = words.filter(w => !stopWords.includes(w));
+  const uniqueWords = [...new Set(filtered)];
+  return uniqueWords.slice(0, 5);
+};
+
 export const newsApi = {
-  // 뉴스 검색 (카테고리, 기간 필터 포함)
+  // 뉴스 검색 (NewsAPI /everything 엔드포인트 사용)
   search: async (params: SearchParams | string): Promise<NewsItem[]> => {
-    // 문자열로 전달된 경우 객체로 변환 (하위 호환성)
     const searchParams: SearchParams = typeof params === 'string' 
       ? { query: params } 
       : params;
@@ -31,7 +93,7 @@ export const newsApi = {
         item.content.toLowerCase().includes(lowerQuery)
       );
       
-      // 카테고리 필터 (더미 데이터에서는 키워드 기반으로 시뮬레이션)
+      // 카테고리 필터 시뮬레이션
       if (searchParams.category) {
         const categoryKeywords: Record<string, string[]> = {
           politics: ['정치', 'government', 'policy', '정책'],
@@ -52,78 +114,91 @@ export const newsApi = {
         }
       }
       
-      // 기간 필터 (더미 데이터에서는 시뮬레이션)
-      if (searchParams.dateRange) {
-        const now = new Date();
-        const filterDate = new Date();
-        
-        switch (searchParams.dateRange) {
-          case 'today':
-            filterDate.setHours(0, 0, 0, 0);
-            break;
-          case 'week':
-            filterDate.setDate(now.getDate() - 7);
-            break;
-          case 'month':
-            filterDate.setMonth(now.getMonth() - 1);
-            break;
-          case 'year':
-            filterDate.setFullYear(now.getFullYear() - 1);
-            break;
-        }
-        
-        results = results.filter(item => {
-          const itemDate = new Date(item.published_at);
-          return itemDate >= filterDate;
-        });
-      }
-      
       return results;
     }
     
-    // 실제 API 호출
-    const response = await apiClient.post<NewsItem[]>('/news/search', null, {
-      params: { 
-        query: searchParams.query,
-        category: searchParams.category || undefined,
-        date_range: searchParams.dateRange || undefined,
-      },
-    });
-    return response.data;
+    // NewsAPI 직접 호출
+    const apiKeys = getApiKeys();
+    const { from, to } = getDateRange(searchParams.dateRange);
+    
+    try {
+      const response = await axios.get('https://newsapi.org/v2/everything', {
+        params: {
+          q: searchParams.query,
+          from: from,
+          to: to,
+          sortBy: 'publishedAt',
+          language: 'en', // 또는 'ko' for Korean
+          pageSize: 20,
+          apiKey: apiKeys.newsApiKey,
+        },
+      });
+      
+      if (response.data?.status === 'ok' && response.data?.articles) {
+        return convertNewsApiResponse(response.data.articles);
+      }
+      return [];
+    } catch (error: any) {
+      console.error('NewsAPI search error:', error.response?.data || error.message);
+      // API 에러 시 더미 데이터로 폴백
+      return DUMMY_NEWS.filter(item => 
+        item.title.toLowerCase().includes(searchParams.query.toLowerCase())
+      );
+    }
   },
 
-  // 전체 뉴스 조회
-  getAll: async (limit = 100, offset = 0): Promise<NewsItem[]> => {
+  // 전체/인기 뉴스 조회 (NewsAPI /top-headlines 엔드포인트 사용)
+  getAll: async (limit = 20, _offset = 0): Promise<NewsItem[]> => {
     if (shouldUseDummyData()) {
       await delay(800);
       return DUMMY_NEWS;
     }
-    const response = await apiClient.get<NewsItem[]>('/news', {
-      params: { limit, offset },
-    });
-    return response.data;
+    
+    const apiKeys = getApiKeys();
+    
+    try {
+      const response = await axios.get('https://newsapi.org/v2/top-headlines', {
+        params: {
+          country: 'us', // 또는 'kr' for Korea
+          pageSize: limit,
+          apiKey: apiKeys.newsApiKey,
+        },
+      });
+      
+      if (response.data?.status === 'ok' && response.data?.articles) {
+        return convertNewsApiResponse(response.data.articles);
+      }
+      return [];
+    } catch (error: any) {
+      console.error('NewsAPI getAll error:', error.response?.data || error.message);
+      return DUMMY_NEWS;
+    }
   },
 
-  // AI 분석 요청
+  // AI 분석 요청 (OpenAI API 사용 - 백엔드 또는 더미)
   analyze: async (id: number): Promise<NewsItem> => {
-    if (shouldUseDummyData()) {
+    // OpenAI API 키가 없으면 시뮬레이션
+    if (!hasOpenAiApiKey()) {
       await delay(1500);
       const item = DUMMY_NEWS.find(n => n.id === id);
       if (!item) throw new Error("Item not found");
       
-      // 요약이 없는 항목에 대해 분석 결과 시뮬레이션
-      if (!item.summary) {
-         return {
-             ...item,
-             summary: "AI 분석 완료: 이 기사는 주요 이슈에 대한 심층적인 내용을 다루고 있습니다. 핵심 포인트는 현재 상황의 영향과 향후 전망입니다.",
-             sentiment_label: item.sentiment_label || "neutral",
-             sentiment_score: item.sentiment_score || 0.0
-         };
-      }
-      return item;
+      return {
+        ...item,
+        summary: "AI 분석 완료: 이 기사는 주요 이슈에 대한 심층적인 내용을 다루고 있습니다. 핵심 포인트는 현재 상황의 영향과 향후 전망입니다.",
+        sentiment_label: item.sentiment_label || "neutral",
+        sentiment_score: item.sentiment_score || 0.0
+      };
     }
-    const response = await apiClient.post<NewsItem>(`/news/analysis/${id}`);
-    return response.data;
+    
+    // 백엔드 AI 분석 API 호출
+    try {
+      const response = await apiClient.post<NewsItem>(`/news/analysis/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Analysis error:', error);
+      throw new Error('AI 분석에 실패했습니다.');
+    }
   },
   
   // 오늘의 인기 뉴스 조회
@@ -132,24 +207,58 @@ export const newsApi = {
       await delay(500);
       return DUMMY_NEWS.slice(0, limit);
     }
-    const response = await apiClient.get<NewsItem[]>('/news/today', {
-      params: { limit },
-    });
-    return response.data;
+    
+    const apiKeys = getApiKeys();
+    
+    try {
+      const response = await axios.get('https://newsapi.org/v2/top-headlines', {
+        params: {
+          country: 'us',
+          pageSize: limit,
+          apiKey: apiKeys.newsApiKey,
+        },
+      });
+      
+      if (response.data?.status === 'ok' && response.data?.articles) {
+        return convertNewsApiResponse(response.data.articles);
+      }
+      return DUMMY_NEWS.slice(0, limit);
+    } catch (error) {
+      console.error('getTodayNews error:', error);
+      return DUMMY_NEWS.slice(0, limit);
+    }
   },
   
   // 인기 키워드 조회
   getTrendingKeywords: async (limit = 10): Promise<string[]> => {
     if (shouldUseDummyData()) {
       await delay(300);
-      // 더미 뉴스에서 키워드 추출
       const allKeywords = DUMMY_NEWS.flatMap(n => n.keywords);
       const uniqueKeywords = [...new Set(allKeywords)];
       return uniqueKeywords.slice(0, limit);
     }
-    const response = await apiClient.get<string[]>('/news/trending-keywords', {
-      params: { limit },
-    });
-    return response.data;
+    
+    // 실시간 모드에서는 최신 뉴스에서 키워드 추출
+    try {
+      const news = await newsApi.getAll(20);
+      const allKeywords = news.flatMap(n => n.keywords);
+      
+      // 키워드 빈도수 계산
+      const keywordCount: Record<string, number> = {};
+      allKeywords.forEach(kw => {
+        keywordCount[kw] = (keywordCount[kw] || 0) + 1;
+      });
+      
+      // 빈도수 순으로 정렬
+      const sorted = Object.entries(keywordCount)
+        .sort((a, b) => b[1] - a[1])
+        .map(([keyword]) => keyword);
+      
+      return sorted.slice(0, limit);
+    } catch (error) {
+      console.error('getTrendingKeywords error:', error);
+      const allKeywords = DUMMY_NEWS.flatMap(n => n.keywords);
+      return [...new Set(allKeywords)].slice(0, limit);
+    }
   },
 };
