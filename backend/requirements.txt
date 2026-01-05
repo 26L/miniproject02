@@ -7,3 +7,4 @@ httpx
 python-dotenv
 openai
 aiosqlite
+newsapi-python

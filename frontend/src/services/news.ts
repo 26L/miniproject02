@@ -1,5 +1,4 @@
-import axios from 'axios';
-import { apiClient, getApiKeys, hasValidApiKeys, hasOpenAiApiKey } from './api';
+import { apiClient, hasValidApiKeys, hasOpenAiApiKey } from './api';
 import type { NewsItem } from '@/types';
 import { DUMMY_NEWS } from './dummyData';
 
@@ -15,70 +14,8 @@ export interface SearchParams {
   dateRange?: string;
 }
 
-// 날짜 범위 계산 함수
-const getDateRange = (dateRange?: string): { from: string; to: string } => {
-  const now = new Date();
-  const to = now.toISOString().split('T')[0]; // 오늘 날짜 (YYYY-MM-DD)
-  let from = to;
-  
-  switch (dateRange) {
-    case 'today':
-      from = to;
-      break;
-    case 'week':
-      const weekAgo = new Date(now);
-      weekAgo.setDate(now.getDate() - 7);
-      from = weekAgo.toISOString().split('T')[0];
-      break;
-    case 'month':
-      const monthAgo = new Date(now);
-      monthAgo.setMonth(now.getMonth() - 1);
-      from = monthAgo.toISOString().split('T')[0];
-      break;
-    case 'year':
-      const yearAgo = new Date(now);
-      yearAgo.setFullYear(now.getFullYear() - 1);
-      from = yearAgo.toISOString().split('T')[0];
-      break;
-    default:
-      // 기본값: 최근 7일
-      const defaultAgo = new Date(now);
-      defaultAgo.setDate(now.getDate() - 7);
-      from = defaultAgo.toISOString().split('T')[0];
-  }
-  
-  return { from, to };
-};
-
-// NewsAPI 응답을 NewsItem으로 변환
-const convertNewsApiResponse = (articles: any[]): NewsItem[] => {
-  return articles.map((article, index) => ({
-    id: index + 1,
-    title: article.title || '제목 없음',
-    url: article.url || '',
-    content: article.content || article.description || '',
-    image_url: article.urlToImage || null,
-    summary: article.description || null,
-    sentiment_label: null, // AI 분석 전
-    sentiment_score: null,
-    keywords: extractKeywords(article.title, article.description),
-    published_at: article.publishedAt || new Date().toISOString(),
-    created_at: new Date().toISOString(),
-  }));
-};
-
-// 간단한 키워드 추출 (제목과 설명에서)
-const extractKeywords = (title: string, description: string): string[] => {
-  const text = `${title || ''} ${description || ''}`.toLowerCase();
-  const stopWords = ['the', 'a', 'an', 'is', 'are', 'was', 'were', 'to', 'of', 'in', 'for', 'on', 'with', 'as', 'by', 'at', 'and', 'or', 'but'];
-  const words = text.match(/\b[a-zA-Z가-힣]{3,}\b/g) || [];
-  const filtered = words.filter(w => !stopWords.includes(w));
-  const uniqueWords = [...new Set(filtered)];
-  return uniqueWords.slice(0, 5);
-};
-
 export const newsApi = {
-  // 뉴스 검색 (NewsAPI /everything 엔드포인트 사용)
+  // 뉴스 검색 (백엔드 API 사용 - newsapi-python 라이브러리)
   search: async (params: SearchParams | string): Promise<NewsItem[]> => {
     const searchParams: SearchParams = typeof params === 'string' 
       ? { query: params } 
@@ -117,29 +54,18 @@ export const newsApi = {
       return results;
     }
     
-    // NewsAPI 직접 호출
-    const apiKeys = getApiKeys();
-    const { from, to } = getDateRange(searchParams.dateRange);
-    
+    // 백엔드 API 호출 (newsapi-python 사용)
     try {
-      const response = await axios.get('https://newsapi.org/v2/everything', {
+      const response = await apiClient.post<NewsItem[]>('/news/search', null, {
         params: {
-          q: searchParams.query,
-          from: from,
-          to: to,
-          sortBy: 'publishedAt',
-          language: 'en', // 또는 'ko' for Korean
-          pageSize: 20,
-          apiKey: apiKeys.newsApiKey,
+          query: searchParams.query,
+          category: searchParams.category || undefined,
+          date_range: searchParams.dateRange || undefined,
         },
       });
-      
-      if (response.data?.status === 'ok' && response.data?.articles) {
-        return convertNewsApiResponse(response.data.articles);
-      }
-      return [];
+      return response.data;
     } catch (error: any) {
-      console.error('NewsAPI search error:', error.response?.data || error.message);
+      console.error('Search error:', error.response?.data || error.message);
       // API 에러 시 더미 데이터로 폴백
       return DUMMY_NEWS.filter(item => 
         item.title.toLowerCase().includes(searchParams.query.toLowerCase())
@@ -147,35 +73,25 @@ export const newsApi = {
     }
   },
 
-  // 전체/인기 뉴스 조회 (NewsAPI /top-headlines 엔드포인트 사용)
-  getAll: async (limit = 20, _offset = 0): Promise<NewsItem[]> => {
+  // 전체/인기 뉴스 조회
+  getAll: async (limit = 20, offset = 0): Promise<NewsItem[]> => {
     if (shouldUseDummyData()) {
       await delay(800);
       return DUMMY_NEWS;
     }
     
-    const apiKeys = getApiKeys();
-    
     try {
-      const response = await axios.get('https://newsapi.org/v2/top-headlines', {
-        params: {
-          country: 'us', // 또는 'kr' for Korea
-          pageSize: limit,
-          apiKey: apiKeys.newsApiKey,
-        },
+      const response = await apiClient.get<NewsItem[]>('/news', {
+        params: { skip: offset, limit },
       });
-      
-      if (response.data?.status === 'ok' && response.data?.articles) {
-        return convertNewsApiResponse(response.data.articles);
-      }
-      return [];
+      return response.data;
     } catch (error: any) {
-      console.error('NewsAPI getAll error:', error.response?.data || error.message);
+      console.error('getAll error:', error.response?.data || error.message);
       return DUMMY_NEWS;
     }
   },
 
-  // AI 분석 요청 (OpenAI API 사용 - 백엔드 또는 더미)
+  // AI 분석 요청
   analyze: async (id: number): Promise<NewsItem> => {
     // OpenAI API 키가 없으면 시뮬레이션
     if (!hasOpenAiApiKey()) {
@@ -201,28 +117,18 @@ export const newsApi = {
     }
   },
   
-  // 오늘의 인기 뉴스 조회
+  // 오늘의 인기 뉴스 조회 (Top Headlines)
   getTodayNews: async (limit = 5): Promise<NewsItem[]> => {
     if (shouldUseDummyData()) {
       await delay(500);
       return DUMMY_NEWS.slice(0, limit);
     }
     
-    const apiKeys = getApiKeys();
-    
     try {
-      const response = await axios.get('https://newsapi.org/v2/top-headlines', {
-        params: {
-          country: 'us',
-          pageSize: limit,
-          apiKey: apiKeys.newsApiKey,
-        },
+      const response = await apiClient.get<NewsItem[]>('/news/today', {
+        params: { limit },
       });
-      
-      if (response.data?.status === 'ok' && response.data?.articles) {
-        return convertNewsApiResponse(response.data.articles);
-      }
-      return DUMMY_NEWS.slice(0, limit);
+      return response.data;
     } catch (error) {
       console.error('getTodayNews error:', error);
       return DUMMY_NEWS.slice(0, limit);
@@ -238,23 +144,11 @@ export const newsApi = {
       return uniqueKeywords.slice(0, limit);
     }
     
-    // 실시간 모드에서는 최신 뉴스에서 키워드 추출
     try {
-      const news = await newsApi.getAll(20);
-      const allKeywords = news.flatMap(n => n.keywords);
-      
-      // 키워드 빈도수 계산
-      const keywordCount: Record<string, number> = {};
-      allKeywords.forEach(kw => {
-        keywordCount[kw] = (keywordCount[kw] || 0) + 1;
+      const response = await apiClient.get<string[]>('/news/trending-keywords', {
+        params: { limit },
       });
-      
-      // 빈도수 순으로 정렬
-      const sorted = Object.entries(keywordCount)
-        .sort((a, b) => b[1] - a[1])
-        .map(([keyword]) => keyword);
-      
-      return sorted.slice(0, limit);
+      return response.data;
     } catch (error) {
       console.error('getTrendingKeywords error:', error);
       const allKeywords = DUMMY_NEWS.flatMap(n => n.keywords);
