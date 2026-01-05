@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Camera, User, Key, Eye, EyeOff, Check, AlertCircle, Settings, Loader2 } from 'lucide-react';
 import type { UserProfile } from './ProfilePanel';
+import { validateApiKey } from '@/services/api';
 
 export interface ApiKeys {
   newsApiKey: string;
@@ -159,12 +160,15 @@ export function ProfileModal({ isOpen, onClose, profile, apiKeys, onSave, onSave
     
     setApiKeyStatus(prev => ({ ...prev, [key]: 'testing' }));
     
-    // 시뮬레이션된 API 키 테스트 (실제 환경에서는 백엔드에서 검증)
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // 데모용: 키 길이가 20자 이상이면 유효로 처리
-    const isValid = apiKey.length >= 20;
-    setApiKeyStatus(prev => ({ ...prev, [key]: isValid ? 'valid' : 'invalid' }));
+    try {
+      // 실제 API 키 검증
+      const keyType = key === 'newsApiKey' ? 'news' : 'openai';
+      const isValid = await validateApiKey(keyType, apiKey);
+      setApiKeyStatus(prev => ({ ...prev, [key]: isValid ? 'valid' : 'invalid' }));
+    } catch (error) {
+      console.error('API key validation error:', error);
+      setApiKeyStatus(prev => ({ ...prev, [key]: 'invalid' }));
+    }
   };
 
   const handleSaveApiKeys = () => {

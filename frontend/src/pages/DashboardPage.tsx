@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { newsApi } from '@/services/news';
+import { newsApi, type SearchParams } from '@/services/news';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { SearchArea } from '@/features/dashboard/SearchArea';
@@ -114,7 +114,7 @@ export function DashboardPage() {
 
   // Search mutation
   const searchMutation = useMutation({
-    mutationFn: newsApi.search,
+    mutationFn: (params: SearchParams) => newsApi.search(params),
     onSuccess: (data) => {
       queryClient.setQueryData(['news', 'latest'], data);
       // Update search stats
@@ -139,10 +139,11 @@ export function DashboardPage() {
   });
 
   // Event handlers
-  const handleSearch = (query: string, _category: string, _dateRange: string) => {
+  const handleSearch = (query: string, category: string, dateRange: string) => {
     setSearchQuery(query);
     if (query.trim()) {
-      searchMutation.mutate(query);
+      // 카테고리와 기간 필터를 함께 전달
+      searchMutation.mutate({ query, category, dateRange });
     }
   };
 
@@ -193,12 +194,12 @@ export function DashboardPage() {
   const handleTodayNewsClick = (title: string) => {
     const keywords = title.split(' ').slice(0, 3).join(' ');
     setSearchQuery(keywords);
-    searchMutation.mutate(keywords);
+    searchMutation.mutate({ query: keywords });
   };
 
   const handleKeywordClick = (keyword: string) => {
     setSearchQuery(keyword);
-    searchMutation.mutate(keyword);
+    searchMutation.mutate({ query: keyword });
   };
 
   const refreshTodayNews = async () => {

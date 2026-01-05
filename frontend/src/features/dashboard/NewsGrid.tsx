@@ -1,6 +1,7 @@
 import type { NewsItem } from '@/types';
 import { NewsCard } from './NewsCard';
-import { Search } from 'lucide-react';
+import { Search, Database, Cloud } from 'lucide-react';
+import { hasValidApiKeys } from '@/services/api';
 
 interface NewsGridProps {
   items: NewsItem[];
@@ -21,6 +22,8 @@ export function NewsGrid({
   bookmarkedIds,
   resultCount 
 }: NewsGridProps) {
+  const isUsingRealApi = hasValidApiKeys();
+  
   return (
     <section className="bg-white rounded-xl shadow-md overflow-hidden" aria-label="검색 결과">
       {/* Column Header */}
@@ -29,8 +32,28 @@ export function NewsGrid({
           <Search className="h-5 w-5 text-primary" />
           검색 결과
         </h2>
-        <div className="text-muted-foreground text-sm">
-          <strong className="text-primary font-semibold">{resultCount}</strong>개의 결과
+        <div className="flex items-center gap-4">
+          {/* API 모드 표시 */}
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+            isUsingRealApi 
+              ? 'bg-green-100 text-green-700' 
+              : 'bg-amber-100 text-amber-700'
+          }`}>
+            {isUsingRealApi ? (
+              <>
+                <Cloud className="h-3.5 w-3.5" />
+                <span>실시간 API</span>
+              </>
+            ) : (
+              <>
+                <Database className="h-3.5 w-3.5" />
+                <span>데모 모드</span>
+              </>
+            )}
+          </div>
+          <div className="text-muted-foreground text-sm">
+            <strong className="text-primary font-semibold">{resultCount}</strong>개의 결과
+          </div>
         </div>
       </div>
 
