@@ -9,7 +9,9 @@ import { TodayNewsPanel, type TodayNewsItem } from '@/features/dashboard/TodayNe
 import { TrendKeywordsPanel } from '@/features/dashboard/TrendPanel';
 import { SentimentPanel, type SentimentData } from '@/features/dashboard/SentimentPanel';
 import { NewsGrid } from '@/features/dashboard/NewsGrid';
-import { ProfileModal, type ApiKeys } from '@/features/dashboard/ProfileModal';
+import { ProfileModal } from '@/features/dashboard/ProfileModal';
+import { LoginModal } from '@/features/auth/LoginModal';
+import { RegisterModal } from '@/features/auth/RegisterModal';
 import type { NewsItem } from '@/types';
 
 // Default profile data
@@ -23,12 +25,6 @@ const DEFAULT_PROFILE: UserProfile = {
     bookmarks: 0,
     readArticles: 0,
   },
-};
-
-// Default API keys
-const DEFAULT_API_KEYS: ApiKeys = {
-  newsApiKey: '',
-  openAiApiKey: '',
 };
 
 // Today's news mock data
@@ -54,8 +50,9 @@ export function DashboardPage() {
   const [analyzingId, setAnalyzingId] = useState<number | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<number[]>([]);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
-  const [apiKeys, setApiKeys] = useState<ApiKeys>(DEFAULT_API_KEYS);
   const [todayNews, setTodayNews] = useState<TodayNewsItem[]>(TODAY_NEWS);
   const [trendKeywords, setTrendKeywords] = useState<string[]>(DEFAULT_KEYWORDS.slice(0, 8));
   const [isKeywordsLoading, setIsKeywordsLoading] = useState(false);
@@ -82,28 +79,12 @@ export function DashboardPage() {
         console.error('Failed to load bookmarks:', e);
       }
     }
-
-    // Load API keys from localStorage
-    const savedApiKeys = localStorage.getItem('newsAnalyzerApiKeys');
-    if (savedApiKeys) {
-      try {
-        setApiKeys({ ...DEFAULT_API_KEYS, ...JSON.parse(savedApiKeys) });
-      } catch (e) {
-        console.error('Failed to load API keys:', e);
-      }
-    }
   }, []);
 
   // Save profile to localStorage
   const saveProfile = useCallback((newProfile: UserProfile) => {
     setProfile(newProfile);
     localStorage.setItem('newsAnalyzerProfile', JSON.stringify(newProfile));
-  }, []);
-
-  // Save API keys to localStorage
-  const saveApiKeys = useCallback((newApiKeys: ApiKeys) => {
-    setApiKeys(newApiKeys);
-    localStorage.setItem('newsAnalyzerApiKeys', JSON.stringify(newApiKeys));
   }, []);
 
   // Fetch news
@@ -228,6 +209,7 @@ export function DashboardPage() {
       {/* Header */}
       <Header 
         onProfileClick={() => setIsProfileModalOpen(true)}
+        onLoginClick={() => setIsLoginModalOpen(true)}
       />
 
       {/* Search Area */}
@@ -312,9 +294,27 @@ export function DashboardPage() {
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         profile={profile}
-        apiKeys={apiKeys}
         onSave={saveProfile}
-        onSaveApiKeys={saveApiKeys}
+      />
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSwitchToRegister={() => {
+          setIsLoginModalOpen(false);
+          setIsRegisterModalOpen(true);
+        }}
+      />
+
+      {/* Register Modal */}
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+        onSwitchToLogin={() => {
+          setIsRegisterModalOpen(false);
+          setIsLoginModalOpen(true);
+        }}
       />
     </div>
   );
